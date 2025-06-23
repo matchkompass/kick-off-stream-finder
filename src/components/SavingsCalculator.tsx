@@ -1,363 +1,294 @@
 
 import { useState } from "react";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
-import { Progress } from "@/components/ui/progress";
-import { Calculator, TrendingUp, TrendingDown, ArrowRight, Lightbulb, PiggyBank } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
+import { Calculator, TrendingUp, TrendingDown, Euro } from "lucide-react";
 
-const providers = [
+const streamingServices = [
   { id: "sky", name: "Sky Sport", price: 29.99, logo: "🔵" },
   { id: "dazn", name: "DAZN", price: 44.99, logo: "🟡" },
   { id: "amazon", name: "Amazon Prime Video", price: 8.99, logo: "🔶" },
-  { id: "magenta", name: "MagentaTV Sport", price: 19.99, logo: "🔴" },
-  { id: "paramount", name: "Paramount+", price: 7.99, logo: "🔵" },
-  { id: "apple", name: "Apple TV+", price: 6.99, logo: "⚫" }
+  { id: "magenta", name: "MagentaTV", price: 19.99, logo: "🔴" },
+  { id: "rtl", name: "RTL+", price: 6.99, logo: "🔺" },
+  { id: "wow", name: "WOW", price: 24.99, logo: "🟣" },
+  { id: "netflix", name: "Netflix", price: 12.99, logo: "🔴" },
+  { id: "disney", name: "Disney+", price: 8.99, logo: "🔵" }
 ];
 
-const recommendations = [
-  {
-    scenario: "Bundesliga Fan",
-    current: ["sky", "dazn"],
-    optimized: ["sky"],
-    description: "Sky allein reicht für 100% Bundesliga-Abdeckung",
-    savings: 44.99
-  },
-  {
-    scenario: "Champions League Fan", 
-    current: ["sky", "dazn", "amazon"],
-    optimized: ["sky", "amazon"],
-    description: "DAZN durch Amazon ersetzen spart Geld bei gleicher CL-Abdeckung",
-    savings: 36.00
-  },
-  {
-    scenario: "Multi-Liga Fan",
-    current: ["sky", "dazn", "amazon", "magenta"],
-    optimized: ["sky", "dazn"],
-    description: "Fokus auf die beiden Hauptanbieter für beste Abdeckung",
-    savings: 28.98
-  }
-];
+interface SavingsCalculatorProps {
+  embedded?: boolean;
+}
 
-export const SavingsCalculator = () => {
-  const [currentSubscriptions, setCurrentSubscriptions] = useState<string[]>([]);
+export const SavingsCalculator = ({ embedded = false }: SavingsCalculatorProps) => {
+  const [currentServices, setCurrentServices] = useState<string[]>([]);
   const [desiredCoverage, setDesiredCoverage] = useState(80);
-  const [flexibilityPreference, setFlexibilityPreference] = useState("monthly");
-  const [budgetLimit, setBudgetLimit] = useState(50);
+  const [showResults, setShowResults] = useState(false);
 
-  const toggleSubscription = (providerId: string) => {
-    setCurrentSubscriptions(prev => 
-      prev.includes(providerId)
-        ? prev.filter(id => id !== providerId)
-        : [...prev, providerId]
+  const toggleService = (serviceId: string) => {
+    setCurrentServices(prev => 
+      prev.includes(serviceId)
+        ? prev.filter(id => id !== serviceId)
+        : [...prev, serviceId]
     );
   };
 
-  const getCurrentMonthlyTotal = () => {
-    return currentSubscriptions.reduce((total, id) => {
-      const provider = providers.find(p => p.id === id);
-      return total + (provider?.price || 0);
+  const calculateSavings = () => {
+    const currentCost = currentServices.reduce((total, serviceId) => {
+      const service = streamingServices.find(s => s.id === serviceId);
+      return total + (service?.price || 0);
     }, 0);
-  };
 
-  const getOptimizedRecommendation = () => {
-    const currentTotal = getCurrentMonthlyTotal();
-    
     // Simplified optimization logic
+    let optimizedServices: string[] = [];
+    let optimizedCost = 0;
+
     if (desiredCoverage >= 90) {
-      return {
-        providers: ["sky", "dazn"],
-        cost: 74.98,
-        coverage: 95,
-        description: "Beste Gesamtabdeckung für Top-Ligen"
-      };
+      optimizedServices = ["sky", "dazn"];
+      optimizedCost = 74.98;
     } else if (desiredCoverage >= 70) {
-      return {
-        providers: ["sky"],
-        cost: 29.99,
-        coverage: 75,
-        description: "Fokus auf Bundesliga und Champions League"
-      };
+      optimizedServices = ["sky"];
+      optimizedCost = 29.99;
     } else {
-      return {
-        providers: ["amazon"],
-        cost: 8.99,
-        coverage: 45,
-        description: "Budget-Option für gelegentliches Schauen"
-      };
+      optimizedServices = ["amazon"];
+      optimizedCost = 8.99;
     }
+
+    return {
+      currentCost,
+      optimizedCost,
+      savings: Math.max(0, currentCost - optimizedCost),
+      optimizedServices,
+      coverage: Math.min(desiredCoverage + 10, 98)
+    };
   };
 
-  const optimized = getOptimizedRecommendation();
-  const currentTotal = getCurrentMonthlyTotal();
-  const monthlySavings = Math.max(0, currentTotal - optimized.cost);
-  const yearlySavings = monthlySavings * 12;
+  const results = showResults ? calculateSavings() : null;
 
   return (
-    <div className="min-h-screen bg-gray-50 py-8">
-      <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="text-center mb-8">
-          <h1 className="text-3xl font-bold text-gray-900 mb-4">
-            Sparpotential-Rechner
-          </h1>
-          <p className="text-xl text-gray-600">
-            Finden Sie heraus, wie viel Sie bei Ihren Streaming-Abos sparen können
-          </p>
-        </div>
+    <div className={embedded ? "" : "min-h-screen bg-gray-50 py-8"}>
+      <div className={embedded ? "" : "max-w-4xl mx-auto px-4 sm:px-6 lg:px-8"}>
+        {!embedded && (
+          <div className="text-center mb-8">
+            <h1 className="text-3xl font-bold text-gray-900 mb-4">
+              <Calculator className="inline-block mr-3 h-8 w-8 text-green-600" />
+              Sparpotential berechnen
+            </h1>
+            <p className="text-xl text-gray-600">
+              Prüfen Sie, wie viel Sie bei Ihren aktuellen Streaming-Abos sparen können
+            </p>
+          </div>
+        )}
 
-        <div className="grid lg:grid-cols-3 gap-8">
-          {/* Input Section */}
-          <div className="lg:col-span-2 space-y-6">
-            {/* Current Subscriptions */}
+        {!showResults ? (
+          <div className="space-y-6">
             <Card>
               <CardHeader>
-                <CardTitle className="flex items-center space-x-2">
-                  <Calculator className="h-5 w-5 text-blue-600" />
-                  <span>Ihre aktuellen Abos</span>
-                </CardTitle>
+                <CardTitle>Ihre aktuellen Streaming-Abos</CardTitle>
                 <CardDescription>
-                  Wählen Sie alle Streaming-Dienste aus, die Sie derzeit abonniert haben
+                  Wählen Sie alle Dienste aus, die Sie derzeit abonniert haben
                 </CardDescription>
               </CardHeader>
               <CardContent>
-                <div className="grid md:grid-cols-2 gap-4">
-                  {providers.map(provider => (
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  {streamingServices.map((service) => (
                     <div
-                      key={provider.id}
-                      onClick={() => toggleSubscription(provider.id)}
+                      key={service.id}
+                      onClick={() => toggleService(service.id)}
                       className={`p-4 border rounded-lg cursor-pointer transition-all hover:shadow-md ${
-                        currentSubscriptions.includes(provider.id)
+                        currentServices.includes(service.id)
                           ? "border-blue-500 bg-blue-50"
                           : "border-gray-200 hover:border-gray-300"
                       }`}
                     >
                       <div className="flex items-center justify-between">
                         <div className="flex items-center space-x-3">
-                          <span className="text-2xl">{provider.logo}</span>
+                          <span className="text-2xl">{service.logo}</span>
                           <div>
-                            <div className="font-medium">{provider.name}</div>
-                            <div className="text-sm text-gray-500">€{provider.price}/Monat</div>
+                            <div className="font-medium text-gray-900">{service.name}</div>
+                            <div className="text-sm text-gray-500">€{service.price}/Monat</div>
                           </div>
                         </div>
-                        <Checkbox
-                          checked={currentSubscriptions.includes(provider.id)}
-                          onChange={() => {}}
-                        />
+                        {currentServices.includes(service.id) && (
+                          <div className="w-6 h-6 bg-blue-600 rounded-full flex items-center justify-center">
+                            <span className="text-white text-sm">✓</span>
+                          </div>
+                        )}
                       </div>
                     </div>
                   ))}
                 </div>
 
-                {currentSubscriptions.length > 0 && (
+                {currentServices.length > 0 && (
                   <div className="mt-6 p-4 bg-gray-50 rounded-lg">
                     <div className="flex justify-between items-center">
-                      <span className="font-medium">Aktuelle Gesamtkosten:</span>
-                      <span className="text-2xl font-bold text-red-600">€{getCurrentMonthlyTotal().toFixed(2)}/Monat</span>
-                    </div>
-                    <div className="text-sm text-gray-600 mt-1">
-                      Das sind €{(getCurrentMonthlyTotal() * 12).toFixed(2)} pro Jahr
+                      <span className="font-medium">Aktuelle monatliche Kosten:</span>
+                      <span className="text-xl font-bold text-gray-900">
+                        €{currentServices.reduce((total, serviceId) => {
+                          const service = streamingServices.find(s => s.id === serviceId);
+                          return total + (service?.price || 0);
+                        }, 0).toFixed(2)}
+                      </span>
                     </div>
                   </div>
                 )}
               </CardContent>
             </Card>
 
-            {/* Preferences */}
             <Card>
               <CardHeader>
-                <CardTitle>Ihre Präferenzen</CardTitle>
+                <CardTitle>Gewünschte Fußball-Abdeckung</CardTitle>
                 <CardDescription>
-                  Definieren Sie Ihre Wünsche für die optimale Streaming-Lösung
+                  Wie viel Prozent Ihrer Lieblingsspiele möchten Sie sehen?
                 </CardDescription>
               </CardHeader>
-              <CardContent className="space-y-6">
-                <div>
-                  <Label className="text-base font-medium">
-                    Gewünschte Spielabdeckung: {desiredCoverage}%
-                  </Label>
-                  <input
-                    type="range"
-                    min="30"
-                    max="100"
-                    value={desiredCoverage}
-                    onChange={(e) => setDesiredCoverage(Number(e.target.value))}
-                    className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer mt-2"
-                  />
-                  <div className="flex justify-between text-sm text-gray-500 mt-1">
-                    <span>30% (Gelegenheitsfan)</span>
-                    <span>100% (Hardcore-Fan)</span>
+              <CardContent>
+                <div className="space-y-4">
+                  <div>
+                    <input
+                      type="range"
+                      min="50"
+                      max="100"
+                      value={desiredCoverage}
+                      onChange={(e) => setDesiredCoverage(Number(e.target.value))}
+                      className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer slider"
+                    />
+                    <div className="flex justify-between text-sm text-gray-500 mt-1">
+                      <span>50%</span>
+                      <span className="font-medium text-lg text-gray-900">{desiredCoverage}%</span>
+                      <span>100%</span>
+                    </div>
                   </div>
-                </div>
-
-                <div>
-                  <Label className="text-base font-medium">
-                    Maximales Budget: €{budgetLimit}/Monat
-                  </Label>
-                  <input
-                    type="range"
-                    min="10"
-                    max="100"
-                    value={budgetLimit}
-                    onChange={(e) => setBudgetLimit(Number(e.target.value))}
-                    className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer mt-2"
-                  />
-                  <div className="flex justify-between text-sm text-gray-500 mt-1">
-                    <span>€10</span>
-                    <span>€100</span>
-                  </div>
-                </div>
-
-                <div>
-                  <Label className="text-base font-medium mb-3 block">Flexibilität</Label>
-                  <div className="space-y-2">
+                  
+                  <div className="grid grid-cols-3 gap-4 mt-4">
                     {[
-                      { value: "monthly", label: "Monatlich kündbar", desc: "Maximale Flexibilität" },
-                      { value: "yearly", label: "Jahresabos bevorzugt", desc: "Bessere Preise akzeptieren" }
-                    ].map(option => (
-                      <div
-                        key={option.value}
-                        onClick={() => setFlexibilityPreference(option.value)}
-                        className={`p-3 border rounded-lg cursor-pointer transition-all ${
-                          flexibilityPreference === option.value
-                            ? "border-green-500 bg-green-50"
-                            : "border-gray-200 hover:border-gray-300"
-                        }`}
-                      >
-                        <div className="flex items-center justify-between">
-                          <div>
-                            <div className="font-medium">{option.label}</div>
-                            <div className="text-sm text-gray-500">{option.desc}</div>
-                          </div>
-                          <Checkbox
-                            checked={flexibilityPreference === option.value}
-                            onChange={() => {}}
-                          />
-                        </div>
+                      { range: "50-70%", desc: "Hauptspiele", color: "bg-yellow-100 text-yellow-800" },
+                      { range: "70-90%", desc: "Meiste Spiele", color: "bg-blue-100 text-blue-800" },
+                      { range: "90-100%", desc: "Alle Spiele", color: "bg-green-100 text-green-800" }
+                    ].map((option, index) => (
+                      <div key={index} className={`p-3 rounded-lg text-center ${option.color}`}>
+                        <div className="font-medium">{option.range}</div>
+                        <div className="text-sm">{option.desc}</div>
                       </div>
                     ))}
                   </div>
                 </div>
               </CardContent>
             </Card>
-          </div>
 
-          {/* Results Section */}
+            <div className="text-center">
+              <Button
+                onClick={() => setShowResults(true)}
+                disabled={currentServices.length === 0}
+                className="bg-green-600 hover:bg-green-700 px-8 py-3 text-lg"
+              >
+                <Calculator className="mr-2 h-5 w-5" />
+                Sparpotential berechnen
+              </Button>
+            </div>
+          </div>
+        ) : (
           <div className="space-y-6">
-            {/* Savings Overview */}
             <Card className="border-green-200 bg-green-50">
               <CardHeader>
-                <CardTitle className="flex items-center space-x-2 text-green-800">
-                  <PiggyBank className="h-5 w-5" />
-                  <span>Ihr Sparpotential</span>
+                <CardTitle className="text-green-800 flex items-center gap-2">
+                  <TrendingUp className="h-5 w-5" />
+                  Ihr Sparpotential
                 </CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="text-center space-y-4">
-                  <div>
-                    <div className="text-3xl font-bold text-green-600">
-                      €{monthlySavings.toFixed(2)}
+                <div className="grid md:grid-cols-3 gap-6">
+                  <div className="text-center">
+                    <div className="text-3xl font-bold text-red-600 mb-1">
+                      €{results!.currentCost.toFixed(2)}
                     </div>
-                    <div className="text-sm text-gray-600">pro Monat</div>
+                    <div className="text-sm text-gray-600">Aktuelle Kosten/Monat</div>
                   </div>
-                  
-                  <div>
-                    <div className="text-2xl font-bold text-green-700">
-                      €{yearlySavings.toFixed(2)}
+                  <div className="text-center">
+                    <div className="text-3xl font-bold text-green-600 mb-1">
+                      €{results!.optimizedCost.toFixed(2)}
                     </div>
-                    <div className="text-sm text-gray-600">pro Jahr</div>
+                    <div className="text-sm text-gray-600">Optimierte Kosten/Monat</div>
                   </div>
-
-                  {monthlySavings > 0 && (
-                    <div className="flex items-center justify-center space-x-1 text-green-600">
-                      <TrendingDown className="h-4 w-4" />
-                      <span className="text-sm font-medium">
-                        {Math.round((monthlySavings / currentTotal) * 100)}% Ersparnis
-                      </span>
+                  <div className="text-center">
+                    <div className="text-3xl font-bold text-blue-600 mb-1">
+                      €{results!.savings.toFixed(2)}
                     </div>
-                  )}
+                    <div className="text-sm text-gray-600">Ersparnis/Monat</div>
+                  </div>
                 </div>
+
+                {results!.savings > 0 && (
+                  <div className="mt-6 p-4 bg-white rounded-lg border border-green-200">
+                    <div className="text-center">
+                      <div className="text-lg font-medium text-gray-900 mb-2">
+                        Jährliche Ersparnis: €{(results!.savings * 12).toFixed(2)}
+                      </div>
+                      <div className="text-sm text-gray-600">
+                        Bei {results!.coverage}% Fußball-Abdeckung
+                      </div>
+                    </div>
+                  </div>
+                )}
               </CardContent>
             </Card>
 
-            {/* Optimized Recommendation */}
             <Card>
               <CardHeader>
-                <CardTitle className="flex items-center space-x-2">
-                  <Lightbulb className="h-5 w-5 text-orange-600" />
-                  <span>Empfohlene Lösung</span>
-                </CardTitle>
+                <CardTitle>Empfohlene Optimierung</CardTitle>
+                <CardDescription>
+                  Diese Anbieter-Kombination ist optimal für Ihre Bedürfnisse
+                </CardDescription>
               </CardHeader>
               <CardContent>
                 <div className="space-y-4">
-                  <div className="text-center">
-                    <div className="text-2xl font-bold text-blue-600">
-                      €{optimized.cost.toFixed(2)}/Monat
-                    </div>
-                    <div className="text-sm text-gray-600">{optimized.description}</div>
-                  </div>
+                  {results!.optimizedServices.map((serviceId) => {
+                    const service = streamingServices.find(s => s.id === serviceId);
+                    if (!service) return null;
 
-                  <div className="space-y-2">
-                    {optimized.providers.map(providerId => {
-                      const provider = providers.find(p => p.id === providerId);
-                      return (
-                        <div key={providerId} className="flex items-center justify-between p-2 bg-gray-50 rounded">
-                          <div className="flex items-center space-x-2">
-                            <span className="text-lg">{provider?.logo}</span>
-                            <span className="text-sm">{provider?.name}</span>
+                    return (
+                      <div key={serviceId} className="flex items-center justify-between p-4 border rounded-lg">
+                        <div className="flex items-center space-x-3">
+                          <span className="text-2xl">{service.logo}</span>
+                          <div>
+                            <div className="font-medium">{service.name}</div>
+                            <div className="text-sm text-gray-500">€{service.price}/Monat</div>
                           </div>
-                          <span className="text-sm font-medium">€{provider?.price}</span>
                         </div>
-                      );
-                    })}
-                  </div>
-
-                  <div className="text-center">
-                    <Progress value={optimized.coverage} className="mb-2" />
-                    <div className="text-sm text-gray-600">
-                      {optimized.coverage}% Spielabdeckung
-                    </div>
-                  </div>
-
-                  <Button className="w-full bg-blue-600 hover:bg-blue-700">
-                    Optimierung umsetzen
-                    <ArrowRight className="ml-2 h-4 w-4" />
-                  </Button>
-                </div>
-              </CardContent>
-            </Card>
-
-            {/* Quick Scenarios */}
-            <Card>
-              <CardHeader>
-                <CardTitle className="text-lg">Beliebte Szenarien</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-3">
-                  {recommendations.slice(0, 3).map((rec, index) => (
-                    <div key={index} className="p-3 bg-gray-50 rounded-lg">
-                      <div className="font-medium text-sm text-gray-900 mb-1">
-                        {rec.scenario}
-                      </div>
-                      <div className="text-xs text-gray-600 mb-2">
-                        {rec.description}
-                      </div>
-                      <div className="flex items-center justify-between">
-                        <Badge variant="secondary" className="bg-green-100 text-green-800">
-                          €{rec.savings}/Monat sparen
-                        </Badge>
-                        <Button variant="ghost" size="sm" className="text-blue-600 text-xs">
-                          Anwenden
+                        <Button variant="outline" size="sm">
+                          Zum Anbieter
                         </Button>
                       </div>
-                    </div>
-                  ))}
+                    );
+                  })}
+                </div>
+
+                <div className="mt-6 p-4 bg-blue-50 rounded-lg">
+                  <div className="flex items-center justify-center space-x-2 text-blue-800">
+                    <TrendingUp className="h-5 w-5" />
+                    <span className="font-medium">
+                      {results!.coverage}% Abdeckung Ihrer Lieblings-Fußballspiele
+                    </span>
+                  </div>
                 </div>
               </CardContent>
             </Card>
+
+            <div className="text-center space-x-4">
+              <Button
+                variant="outline"
+                onClick={() => setShowResults(false)}
+              >
+                Neue Berechnung
+              </Button>
+              <Button className="bg-green-600 hover:bg-green-700">
+                Angebote vergleichen
+              </Button>
+            </div>
           </div>
-        </div>
+        )}
       </div>
     </div>
   );

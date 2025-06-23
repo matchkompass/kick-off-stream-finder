@@ -1,44 +1,50 @@
+
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { ArrowDown, Search, Calculator, TrendingUp, Play, Shield, Clock } from "lucide-react";
+import { ArrowDown, Search, Calculator, TrendingUp, Play, Shield, Clock, Users, Trophy, Target } from "lucide-react";
 import { StreamingWizard } from "@/components/StreamingWizard";
 import { ProviderComparison } from "@/components/ProviderComparison";
 import { NewsSection } from "@/components/NewsSection";
 import { DealsSection } from "@/components/DealsSection";
 import { SavingsCalculator } from "@/components/SavingsCalculator";
+import { TeamLandingPage } from "@/components/TeamLandingPage";
+
 const Index = () => {
   const [activeSection, setActiveSection] = useState("home");
-  return <div className="min-h-screen bg-white">
+  const [selectedTeam, setSelectedTeam] = useState<string | null>(null);
+
+  if (selectedTeam) {
+    return <TeamLandingPage teamName={selectedTeam} onBack={() => setSelectedTeam(null)} />;
+  }
+
+  return (
+    <div className="min-h-screen bg-white">
       {/* Navigation */}
-      <nav className="bg-white border-b border-gray-200 sticky top-0 z-50">
+      <nav className="bg-white border-b border-gray-100 sticky top-0 z-50 shadow-sm">
         <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-16">
-            <div className="flex items-center space-x-2">
+            <div className="flex items-center space-x-2 cursor-pointer" onClick={() => setActiveSection("home")}>
               <div className="w-8 h-8 bg-green-600 rounded-lg flex items-center justify-center">
                 <Play className="h-5 w-5 text-white" />
               </div>
               <span className="text-xl font-bold text-gray-900">StreamFußball</span>
             </div>
             
-            <div className="hidden md:flex items-center space-x-8">
-              <button onClick={() => setActiveSection("wizard")} className="text-gray-700 hover:text-green-600 font-medium transition-colors">
-                Klickstrecke
+            <div className="hidden md:flex items-center space-x-6">
+              <button onClick={() => setActiveSection("vergleiche")} className="text-gray-700 hover:text-green-600 font-medium transition-colors">
+                Vergleich
               </button>
-              <button onClick={() => setActiveSection("vergleiche")} className="text-gray-700 hover:text-green-600 font-medium transition-colors">Vergleich</button>
               <button onClick={() => setActiveSection("news")} className="text-gray-700 hover:text-green-600 font-medium transition-colors">
                 News & Spiele
               </button>
               <button onClick={() => setActiveSection("deals")} className="text-gray-700 hover:text-green-600 font-medium transition-colors">
                 Deals
               </button>
-              <button onClick={() => setActiveSection("rechner")} className="text-gray-700 hover:text-green-600 font-medium transition-colors">
-                Sparpotential
-              </button>
             </div>
 
-            <Button onClick={() => setActiveSection("wizard")} className="bg-orange-500 hover:bg-orange-600 text-white">
+            <Button onClick={() => setActiveSection("wizard")} className="bg-green-600 hover:bg-green-700 text-white">
               Jetzt optimieren
             </Button>
           </div>
@@ -46,11 +52,12 @@ const Index = () => {
       </nav>
 
       {/* Content Sections */}
-      {activeSection === "home" && <>
+      {activeSection === "home" && (
+        <>
           {/* Hero Section */}
-          <section className="bg-gradient-to-br from-green-50 to-blue-50 py-20">
+          <section className="bg-gradient-to-br from-green-50 to-blue-50 py-16">
             <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-              <h1 className="text-5xl font-bold text-gray-900 mb-6">
+              <h1 className="text-4xl md:text-5xl font-bold text-gray-900 mb-6">
                 Nie wieder ein <span className="text-green-600">Fußballspiel</span> verpassen
               </h1>
               <p className="text-xl text-gray-600 mb-8 max-w-3xl mx-auto">
@@ -63,7 +70,7 @@ const Index = () => {
                   <Search className="mr-2 h-5 w-5" />
                   Personalisierte Empfehlung starten
                 </Button>
-                <Button onClick={() => setActiveSection("vergleiche")} variant="outline" size="lg" className="border-blue-600 text-blue-600 hover:bg-blue-50 px-8 py-4 text-lg">
+                <Button onClick={() => setActiveSection("vergleiche")} variant="outline" size="lg" className="border-green-600 text-green-600 hover:bg-green-50 px-8 py-4 text-lg">
                   Anbieter vergleichen
                 </Button>
               </div>
@@ -79,15 +86,108 @@ const Index = () => {
                   <span>Täglich aktualisiert</span>
                 </div>
                 <div className="flex items-center gap-2">
-                  <TrendingUp className="h-5 w-5 text-green-600" />
+                  <Users className="h-5 w-5 text-green-600" />
                   <span>Über 50.000 zufriedene Nutzer</span>
                 </div>
               </div>
             </div>
           </section>
 
+          {/* Quick Stats */}
+          <section className="py-12 bg-white">
+            <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-8 text-center">
+                <div>
+                  <div className="text-3xl font-bold text-green-600 mb-2">800+</div>
+                  <div className="text-gray-600">Europäische Vereine</div>
+                </div>
+                <div>
+                  <div className="text-3xl font-bold text-blue-600 mb-2">18+</div>
+                  <div className="text-gray-600">Streaming-Anbieter</div>
+                </div>
+                <div>
+                  <div className="text-3xl font-bold text-orange-600 mb-2">92%</div>
+                  <div className="text-gray-600">Durchschnittliche Abdeckung</div>
+                </div>
+                <div>
+                  <div className="text-3xl font-bold text-green-600 mb-2">€147</div>
+                  <div className="text-gray-600">Durchschnittliche Ersparnis/Jahr</div>
+                </div>
+              </div>
+            </div>
+          </section>
+
+          {/* Streaming Wizard Integration */}
+          <section className="py-16 bg-gray-50">
+            <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+              <div className="text-center mb-8">
+                <h2 className="text-3xl font-bold text-gray-900 mb-4">
+                  Ihre personalisierte Streaming-Empfehlung
+                </h2>
+                <p className="text-xl text-gray-600">
+                  In nur 3 Schritten zur optimalen Lösung für Ihre Lieblingsvereine
+                </p>
+              </div>
+              <StreamingWizard embedded={true} />
+            </div>
+          </section>
+
+          {/* Popular Teams */}
+          <section className="py-16 bg-white">
+            <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+              <h2 className="text-3xl font-bold text-center text-gray-900 mb-12">
+                Beliebte Vereine
+              </h2>
+              
+              <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4">
+                {[
+                  { name: "Bayern München", league: "Bundesliga", logo: "🔴" },
+                  { name: "Borussia Dortmund", league: "Bundesliga", logo: "🟡" },
+                  { name: "Real Madrid", league: "La Liga", logo: "⚪" },
+                  { name: "FC Barcelona", league: "La Liga", logo: "🔵" },
+                  { name: "Manchester City", league: "Premier League", logo: "🔵" },
+                  { name: "Liverpool FC", league: "Premier League", logo: "🔴" },
+                  { name: "Juventus Turin", league: "Serie A", logo: "⚫" },
+                  { name: "AC Mailand", league: "Serie A", logo: "🔴" },
+                  { name: "Paris Saint-Germain", league: "Ligue 1", logo: "🔴" },
+                  { name: "Ajax Amsterdam", league: "Eredivisie", logo: "🔴" },
+                  { name: "FC Porto", league: "Primeira Liga", logo: "🔵" },
+                  { name: "Celtic Glasgow", league: "Scottish Premiership", logo: "🟢" }
+                ].map((team) => (
+                  <Card 
+                    key={team.name} 
+                    className="cursor-pointer hover:shadow-lg transition-shadow"
+                    onClick={() => setSelectedTeam(team.name)}
+                  >
+                    <CardContent className="p-4 text-center">
+                      <div className="text-2xl mb-2">{team.logo}</div>
+                      <div className="font-medium text-sm mb-1">{team.name}</div>
+                      <div className="text-xs text-gray-500">{team.league}</div>
+                    </CardContent>
+                  </Card>
+                ))}
+              </div>
+            </div>
+          </section>
+
+          {/* Savings Calculator Integration */}
+          <section className="py-16 bg-gradient-to-br from-blue-50 to-green-50">
+            <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+              <div className="text-center mb-8">
+                <h2 className="text-3xl font-bold text-gray-900 mb-4">
+                  <Calculator className="inline-block mr-3 h-8 w-8 text-green-600" />
+                  Sparpotential berechnen
+                </h2>
+                <p className="text-xl text-gray-600">
+                  Prüfen Sie, wie viel Sie bei Ihren aktuellen Streaming-Abos sparen können
+                </p>
+              </div>
+              <SavingsCalculator embedded={true} />
+            </div>
+          </section>
+
           {/* Key Features */}
-          <section className="py-20 bg-white">
+          <section className="py-16 bg-white">
             <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
               <h2 className="text-3xl font-bold text-center text-gray-900 mb-12">
                 So funktioniert StreamFußball
@@ -103,7 +203,7 @@ const Index = () => {
                   </CardHeader>
                   <CardContent>
                     <CardDescription className="text-gray-600">
-                      Wählen Sie Ihre Lieblingsvereine aus über 500 europäischen Teams. 
+                      Wählen Sie Ihre Lieblingsvereine aus über 800 europäischen Teams. 
                       Von Bayern München bis Real Madrid.
                     </CardDescription>
                   </CardContent>
@@ -112,13 +212,13 @@ const Index = () => {
                 <Card className="text-center border-none shadow-lg hover:shadow-xl transition-shadow">
                   <CardHeader>
                     <div className="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                      <Calculator className="h-8 w-8 text-blue-600" />
+                      <Trophy className="h-8 w-8 text-blue-600" />
                     </div>
-                    <CardTitle className="text-xl">2. Präferenzen angeben</CardTitle>
+                    <CardTitle className="text-xl">2. Wettbewerbe definieren</CardTitle>
                   </CardHeader>
                   <CardContent>
                     <CardDescription className="text-gray-600">
-                      Budget festlegen, gewünschte Ligen auswählen und Ihre Prioritäten definieren. 
+                      Präferenzen für Streaming-Features und gewünschte Wettbewerbe festlegen. 
                       Alles vollständig personalisiert.
                     </CardDescription>
                   </CardContent>
@@ -127,7 +227,7 @@ const Index = () => {
                 <Card className="text-center border-none shadow-lg hover:shadow-xl transition-shadow">
                   <CardHeader>
                     <div className="w-16 h-16 bg-orange-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                      <TrendingUp className="h-8 w-8 text-orange-600" />
+                      <Target className="h-8 w-8 text-orange-600" />
                     </div>
                     <CardTitle className="text-xl">3. Optimale Lösung erhalten</CardTitle>
                   </CardHeader>
@@ -142,32 +242,8 @@ const Index = () => {
             </div>
           </section>
 
-          {/* Quick Stats */}
-          <section className="py-16 bg-gray-50">
-            <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-8 text-center">
-                <div>
-                  <div className="text-3xl font-bold text-green-600 mb-2">500+</div>
-                  <div className="text-gray-600">Europäische Vereine</div>
-                </div>
-                <div>
-                  <div className="text-3xl font-bold text-blue-600 mb-2">15+</div>
-                  <div className="text-gray-600">Streaming-Anbieter</div>
-                </div>
-                <div>
-                  <div className="text-3xl font-bold text-orange-600 mb-2">89%</div>
-                  <div className="text-gray-600">Durchschnittliche Abdeckung</div>
-                </div>
-                <div>
-                  <div className="text-3xl font-bold text-green-600 mb-2">€127</div>
-                  <div className="text-gray-600">Durchschnittliche Ersparnis/Jahr</div>
-                </div>
-              </div>
-            </div>
-          </section>
-
           {/* CTA Section */}
-          <section className="py-20 bg-gradient-to-r from-green-600 to-blue-600">
+          <section className="py-16 bg-gradient-to-r from-green-600 to-blue-600">
             <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
               <h2 className="text-3xl font-bold text-white mb-6">
                 Bereit für die perfekte Streaming-Lösung?
@@ -181,13 +257,14 @@ const Index = () => {
               </Button>
             </div>
           </section>
-        </>}
+        </>
+      )}
 
-      {activeSection === "wizard" && <StreamingWizard />}
+      {activeSection === "wizard" && <StreamingWizard embedded={false} />}
       {activeSection === "vergleiche" && <ProviderComparison />}
       {activeSection === "news" && <NewsSection />}
       {activeSection === "deals" && <DealsSection />}
-      {activeSection === "rechner" && <SavingsCalculator />}
+      {activeSection === "rechner" && <SavingsCalculator embedded={false} />}
 
       {/* Footer */}
       <footer className="bg-gray-900 text-white py-12">
@@ -241,6 +318,8 @@ const Index = () => {
           </div>
         </div>
       </footer>
-    </div>;
+    </div>
+  );
 };
+
 export default Index;

@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -9,12 +8,9 @@ import { ProviderComparison } from "@/components/ProviderComparison";
 import { NewsSection } from "@/components/NewsSection";
 import { DealsSection } from "@/components/DealsSection";
 import { SavingsCalculator } from "@/components/SavingsCalculator";
-
 const Index = () => {
   const [activeSection, setActiveSection] = useState("home");
-
-  return (
-    <div className="min-h-screen bg-white">
+  return <div className="min-h-screen bg-white">
       {/* Navigation */}
       <nav className="bg-white border-b border-gray-200 sticky top-0 z-50">
         <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -27,42 +23,22 @@ const Index = () => {
             </div>
             
             <div className="hidden md:flex items-center space-x-8">
-              <button 
-                onClick={() => setActiveSection("wizard")}
-                className="text-gray-700 hover:text-green-600 font-medium transition-colors"
-              >
+              <button onClick={() => setActiveSection("wizard")} className="text-gray-700 hover:text-green-600 font-medium transition-colors">
                 Klickstrecke
               </button>
-              <button 
-                onClick={() => setActiveSection("vergleiche")}
-                className="text-gray-700 hover:text-green-600 font-medium transition-colors"
-              >
-                Vergleiche
-              </button>
-              <button 
-                onClick={() => setActiveSection("news")}
-                className="text-gray-700 hover:text-green-600 font-medium transition-colors"
-              >
+              <button onClick={() => setActiveSection("vergleiche")} className="text-gray-700 hover:text-green-600 font-medium transition-colors">Vergleich</button>
+              <button onClick={() => setActiveSection("news")} className="text-gray-700 hover:text-green-600 font-medium transition-colors">
                 News & Spiele
               </button>
-              <button 
-                onClick={() => setActiveSection("deals")}
-                className="text-gray-700 hover:text-green-600 font-medium transition-colors"
-              >
+              <button onClick={() => setActiveSection("deals")} className="text-gray-700 hover:text-green-600 font-medium transition-colors">
                 Deals
               </button>
-              <button 
-                onClick={() => setActiveSection("rechner")}
-                className="text-gray-700 hover:text-green-600 font-medium transition-colors"
-              >
+              <button onClick={() => setActiveSection("rechner")} className="text-gray-700 hover:text-green-600 font-medium transition-colors">
                 Sparpotential
               </button>
             </div>
 
-            <Button 
-              onClick={() => setActiveSection("wizard")}
-              className="bg-orange-500 hover:bg-orange-600 text-white"
-            >
+            <Button onClick={() => setActiveSection("wizard")} className="bg-orange-500 hover:bg-orange-600 text-white">
               Jetzt optimieren
             </Button>
           </div>
@@ -70,8 +46,7 @@ const Index = () => {
       </nav>
 
       {/* Content Sections */}
-      {activeSection === "home" && (
-        <>
+      {activeSection === "home" && <>
           {/* Hero Section */}
           <section className="bg-gradient-to-br from-green-50 to-blue-50 py-20">
             <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
@@ -84,20 +59,11 @@ const Index = () => {
               </p>
               
               <div className="flex flex-col sm:flex-row gap-4 justify-center items-center mb-12">
-                <Button 
-                  onClick={() => setActiveSection("wizard")}
-                  size="lg" 
-                  className="bg-green-600 hover:bg-green-700 text-white px-8 py-4 text-lg"
-                >
+                <Button onClick={() => setActiveSection("wizard")} size="lg" className="bg-green-600 hover:bg-green-700 text-white px-8 py-4 text-lg">
                   <Search className="mr-2 h-5 w-5" />
                   Personalisierte Empfehlung starten
                 </Button>
-                <Button 
-                  onClick={() => setActiveSection("vergleiche")}
-                  variant="outline" 
-                  size="lg" 
-                  className="border-blue-600 text-blue-600 hover:bg-blue-50 px-8 py-4 text-lg"
-                >
+                <Button onClick={() => setActiveSection("vergleiche")} variant="outline" size="lg" className="border-blue-600 text-blue-600 hover:bg-blue-50 px-8 py-4 text-lg">
                   Anbieter vergleichen
                 </Button>
               </div>
@@ -209,18 +175,13 @@ const Index = () => {
               <p className="text-xl text-green-100 mb-8">
                 Starten Sie jetzt die kostenlose Analyse und verpassen Sie nie wieder ein wichtiges Spiel.
               </p>
-              <Button 
-                onClick={() => setActiveSection("wizard")}
-                size="lg" 
-                className="bg-white text-green-600 hover:bg-gray-100 px-8 py-4 text-lg font-semibold"
-              >
+              <Button onClick={() => setActiveSection("wizard")} size="lg" className="bg-white text-green-600 hover:bg-gray-100 px-8 py-4 text-lg font-semibold">
                 Jetzt kostenlos starten
                 <ArrowDown className="ml-2 h-5 w-5" />
               </Button>
             </div>
           </section>
-        </>
-      )}
+        </>}
 
       {activeSection === "wizard" && <StreamingWizard />}
       {activeSection === "vergleiche" && <ProviderComparison />}
@@ -280,8 +241,6 @@ const Index = () => {
           </div>
         </div>
       </footer>
-    </div>
-  );
+    </div>;
 };
-
 export default Index;

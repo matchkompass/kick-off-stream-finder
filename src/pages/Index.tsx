@@ -9,6 +9,11 @@ import { NewsSection } from "@/components/NewsSection";
 import { DealsSection } from "@/components/DealsSection";
 import { SavingsCalculator } from "@/components/SavingsCalculator";
 import { TeamLandingPage } from "@/components/TeamLandingPage";
+import { TeamPage } from "@/components/TeamPage";
+import { LeaguePage } from "@/components/LeaguePage";
+import { ProviderPage } from "@/components/ProviderPage";
+import { FAQ } from "@/components/FAQ";
+import { FooterLinks } from "@/components/FooterLinks";
 
 const popularCompetitions = [
   {
@@ -77,9 +82,38 @@ const popularCompetitions = [
 const Index = () => {
   const [activeSection, setActiveSection] = useState("home");
   const [selectedTeam, setSelectedTeam] = useState<string | null>(null);
+  const [selectedLeague, setSelectedLeague] = useState<string | null>(null);
+  const [selectedProvider, setSelectedProvider] = useState<string | null>(null);
+
+  const homeFAQ = [
+    {
+      question: "Wie funktioniert die Streaming-Empfehlung?",
+      answer: "Unsere Empfehlung basiert auf Ihren ausgewählten Vereinen und gewünschten Wettbewerben. Wir berechnen die optimale Anbieter-Kombination für maximale Spielabdeckung."
+    },
+    {
+      question: "Sind die Preise aktuell?",
+      answer: "Ja, wir aktualisieren alle Preise täglich und prüfen regelmäßig die Verfügbarkeit der Streaming-Angebote."
+    },
+    {
+      question: "Kann ich mehrere Vereine auswählen?",
+      answer: "Selbstverständlich! Sie können beliebig viele Vereine auswählen. Unsere Empfehlung berücksichtigt alle Ihre Favoriten."
+    },
+    {
+      question: "Gibt es versteckte Kosten?",
+      answer: "Nein, unsere Plattform ist komplett kostenlos. Alle angezeigten Preise sind die offiziellen Anbieterpreise ohne Aufschläge."
+    }
+  ];
 
   if (selectedTeam) {
-    return <TeamLandingPage teamName={selectedTeam} onBack={() => setSelectedTeam(null)} />;
+    return <TeamPage teamName={selectedTeam} onBack={() => setSelectedTeam(null)} />;
+  }
+
+  if (selectedLeague) {
+    return <LeaguePage leagueName={selectedLeague} onBack={() => setSelectedLeague(null)} />;
+  }
+
+  if (selectedProvider) {
+    return <ProviderPage providerName={selectedProvider} onBack={() => setSelectedProvider(null)} />;
   }
 
   return (
@@ -233,13 +267,13 @@ const Index = () => {
           </section>
 
           {/* Streaming Wizard Integration */}
-          <section className="py-16 bg-white">
+          <section className="py-8 md:py-16 bg-white">
             <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
-              <div className="text-center mb-8">
-                <h2 className="text-3xl font-bold text-gray-900 mb-4">
+              <div className="text-center mb-6 md:mb-8">
+                <h2 className="text-2xl md:text-3xl font-bold text-gray-900 mb-4">
                   Ihre personalisierte Streaming-Empfehlung
                 </h2>
-                <p className="text-xl text-gray-600">
+                <p className="text-lg md:text-xl text-gray-600">
                   In nur 3 Schritten zur optimalen Lösung für Ihre Lieblingsvereine
                 </p>
               </div>
@@ -248,13 +282,13 @@ const Index = () => {
           </section>
 
           {/* Popular Teams */}
-          <section className="py-16 bg-white">
+          <section className="py-8 md:py-16 bg-gray-50">
             <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
-              <h2 className="text-3xl font-bold text-center text-gray-900 mb-12">
+              <h2 className="text-2xl md:text-3xl font-bold text-center text-gray-900 mb-8 md:mb-12">
                 Beliebte Vereine
               </h2>
               
-              <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4">
+              <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-3 md:gap-4">
                 {[
                   { name: "Bayern München", league: "Bundesliga", logo: "🔴" },
                   { name: "Borussia Dortmund", league: "Bundesliga", logo: "🟡" },
@@ -274,9 +308,9 @@ const Index = () => {
                     className="cursor-pointer hover:shadow-lg transition-shadow"
                     onClick={() => setSelectedTeam(team.name)}
                   >
-                    <CardContent className="p-4 text-center">
-                      <div className="text-2xl mb-2">{team.logo}</div>
-                      <div className="font-medium text-sm mb-1">{team.name}</div>
+                    <CardContent className="p-3 md:p-4 text-center">
+                      <div className="text-xl md:text-2xl mb-2">{team.logo}</div>
+                      <div className="font-medium text-xs md:text-sm mb-1">{team.name}</div>
                       <div className="text-xs text-gray-500">{team.league}</div>
                     </CardContent>
                   </Card>
@@ -286,14 +320,14 @@ const Index = () => {
           </section>
 
           {/* Savings Calculator Integration */}
-          <section className="py-16 bg-gradient-to-br from-blue-50 to-green-50">
+          <section className="py-8 md:py-16 bg-gradient-to-br from-blue-50 to-green-50">
             <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
-              <div className="text-center mb-8">
-                <h2 className="text-3xl font-bold text-gray-900 mb-4">
-                  <Calculator className="inline-block mr-3 h-8 w-8 text-green-600" />
+              <div className="text-center mb-6 md:mb-8">
+                <h2 className="text-2xl md:text-3xl font-bold text-gray-900 mb-4">
+                  <Calculator className="inline-block mr-3 h-6 w-6 md:h-8 md:w-8 text-green-600" />
                   Sparpotential berechnen
                 </h2>
-                <p className="text-xl text-gray-600">
+                <p className="text-lg md:text-xl text-gray-600">
                   Prüfen Sie, wie viel Sie bei Ihren aktuellen Streaming-Abos sparen können
                 </p>
               </div>
@@ -381,10 +415,24 @@ const Index = () => {
       {activeSection === "deals" && <DealsSection />}
       {activeSection === "rechner" && <SavingsCalculator embedded={false} />}
 
+      {/* FAQ Section */}
+      <section className="py-8 md:py-16 bg-white">
+        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+          <FAQ questions={homeFAQ} title="Häufig gestellte Fragen" />
+        </div>
+      </section>
+
+      {/* Footer Links */}
+      <FooterLinks 
+        onTeamClick={setSelectedTeam}
+        onLeagueClick={setSelectedLeague}
+        onProviderClick={setSelectedProvider}
+      />
+
       {/* Footer */}
-      <footer className="bg-gray-900 text-white py-12">
+      <footer className="bg-gray-900 text-white py-8 md:py-12">
         <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="grid md:grid-cols-4 gap-8">
+          <div className="grid md:grid-cols-4 gap-6 md:gap-8">
             <div>
               <div className="flex items-center space-x-2 mb-4">
                 <div className="w-8 h-8 bg-green-600 rounded-lg flex items-center justify-center">
@@ -392,43 +440,15 @@ const Index = () => {
                 </div>
                 <span className="text-xl font-bold">StreamFußball</span>
               </div>
-              <p className="text-gray-400">
+              <p className="text-gray-400 text-sm">
                 Die unabhängige Plattform für optimale Fußball-Streaming-Lösungen.
               </p>
             </div>
             
-            <div>
-              <h3 className="font-semibold mb-4">Funktionen</h3>
-              <ul className="space-y-2 text-gray-400">
-                <li>Personalisierte Empfehlungen</li>
-                <li>Anbieter-Vergleiche</li>
-                <li>Sparpotential-Rechner</li>
-                <li>Aktuelle Deals</li>
-              </ul>
-            </div>
-            
-            <div>
-              <h3 className="font-semibold mb-4">Ligen</h3>
-              <ul className="space-y-2 text-gray-400">
-                <li>Bundesliga</li>
-                <li>Champions League</li>
-                <li>Premier League</li>
-                <li>La Liga</li>
-              </ul>
-            </div>
-            
-            <div>
-              <h3 className="font-semibold mb-4">Support</h3>
-              <ul className="space-y-2 text-gray-400">
-                <li>FAQ</li>
-                <li>Kontakt</li>
-                <li>Datenschutz</li>
-                <li>Impressum</li>
-              </ul>
-            </div>
+            {/* ... keep existing code (footer columns) */}
           </div>
           
-          <div className="border-t border-gray-800 mt-8 pt-8 text-center text-gray-400">
+          <div className="border-t border-gray-800 mt-6 md:mt-8 pt-6 md:pt-8 text-center text-gray-400">
             <p>&copy; 2024 StreamFußball. Alle Rechte vorbehalten.</p>
           </div>
         </div>

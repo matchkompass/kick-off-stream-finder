@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
-import { Check, X, Star, TrendingUp, Filter } from "lucide-react";
+import { Check, X, Star, TrendingUp, Filter, ChevronDown, ChevronUp } from "lucide-react";
 
 const providers = [
   {
@@ -13,17 +13,19 @@ const providers = [
     logo: "🔵",
     monthlyPrice: 29.99,
     yearlyPrice: 299.99,
-    bundesliga: 100,
-    "2-bundesliga": 0,
-    championsLeague: 100,
-    europaLeague: 0,
-    conferenceLeague: 0,
-    premierLeague: 100,
-    laLiga: 0,
-    serieA: 0,
-    ligue1: 0,
-    dfbPokal: 100,
-    nationalteam: 50,
+    competitions: {
+      "bundesliga": 100,
+      "2-bundesliga": 0,
+      "champions-league": 100,
+      "europa-league": 0,
+      "conference-league": 0,
+      "premier-league": 100,
+      "la-liga": 0,
+      "serie-a": 0,
+      "ligue-1": 0,
+      "dfb-pokal": 100,
+      "nationalteam": 50
+    },
     features: {
       fourK: true,
       multiDevice: true,
@@ -41,17 +43,19 @@ const providers = [
     logo: "🟡",
     monthlyPrice: 44.99,
     yearlyPrice: 449.99,
-    bundesliga: 0,
-    "2-bundesliga": 0,
-    championsLeague: 85,
-    europaLeague: 100,
-    conferenceLeague: 100,
-    premierLeague: 0,
-    laLiga: 100,
-    serieA: 100,
-    ligue1: 100,
-    dfbPokal: 0,
-    nationalteam: 30,
+    competitions: {
+      "bundesliga": 0,
+      "2-bundesliga": 0,
+      "champions-league": 85,
+      "europa-league": 100,
+      "conference-league": 100,
+      "premier-league": 0,
+      "la-liga": 100,
+      "serie-a": 100,
+      "ligue-1": 100,
+      "dfb-pokal": 0,
+      "nationalteam": 30
+    },
     features: {
       fourK: true,
       multiDevice: true,
@@ -69,17 +73,19 @@ const providers = [
     logo: "🔶",
     monthlyPrice: 8.99,
     yearlyPrice: 89.99,
-    bundesliga: 0,
-    "2-bundesliga": 0,
-    championsLeague: 15,
-    europaLeague: 0,
-    conferenceLeague: 0,
-    premierLeague: 0,
-    laLiga: 0,
-    serieA: 0,
-    ligue1: 0,
-    dfbPokal: 0,
-    nationalteam: 0,
+    competitions: {
+      "bundesliga": 0,
+      "2-bundesliga": 0,
+      "champions-league": 15,
+      "europa-league": 0,
+      "conference-league": 0,
+      "premier-league": 0,
+      "la-liga": 0,
+      "serie-a": 0,
+      "ligue-1": 0,
+      "dfb-pokal": 0,
+      "nationalteam": 0
+    },
     features: {
       fourK: true,
       multiDevice: true,
@@ -93,31 +99,33 @@ const providers = [
     popular: false
   },
   {
-    name: "MagentaTV",
-    logo: "🔴",
-    monthlyPrice: 19.99,
-    yearlyPrice: 199.99,
-    bundesliga: 50,
-    "2-bundesliga": 100,
-    championsLeague: 0,
-    europaLeague: 0,
-    conferenceLeague: 0,
-    premierLeague: 0,
-    laLiga: 0,
-    serieA: 0,
-    ligue1: 0,
-    dfbPokal: 50,
-    nationalteam: 20,
+    name: "WOW",
+    logo: "🟣",
+    monthlyPrice: 24.99,
+    yearlyPrice: 249.99,
+    competitions: {
+      "bundesliga": 100,
+      "2-bundesliga": 0,
+      "champions-league": 100,
+      "europa-league": 0,
+      "conference-league": 0,
+      "premier-league": 100,
+      "la-liga": 0,
+      "serie-a": 0,
+      "ligue-1": 0,
+      "dfb-pokal": 100,
+      "nationalteam": 50
+    },
     features: {
       fourK: true,
       multiDevice: true,
       liveReplay: true,
-      conference: false,
+      conference: true,
       catchUp: true,
       noAds: true,
       offline: false
     },
-    rating: 3.5,
+    rating: 3.9,
     popular: false
   },
   {
@@ -125,17 +133,19 @@ const providers = [
     logo: "🔺",
     monthlyPrice: 6.99,
     yearlyPrice: 69.99,
-    bundesliga: 0,
-    "2-bundesliga": 0,
-    championsLeague: 0,
-    europaLeague: 20,
-    conferenceLeague: 100,
-    premierLeague: 0,
-    laLiga: 0,
-    serieA: 0,
-    ligue1: 0,
-    dfbPokal: 0,
-    nationalteam: 0,
+    competitions: {
+      "bundesliga": 0,
+      "2-bundesliga": 0,
+      "champions-league": 0,
+      "europa-league": 20,
+      "conference-league": 100,
+      "premier-league": 0,
+      "la-liga": 0,
+      "serie-a": 0,
+      "ligue-1": 0,
+      "dfb-pokal": 0,
+      "nationalteam": 0
+    },
     features: {
       fourK: false,
       multiDevice: true,
@@ -149,47 +159,49 @@ const providers = [
     popular: false
   },
   {
-    name: "WOW",
-    logo: "🟣",
-    monthlyPrice: 24.99,
-    yearlyPrice: 249.99,
-    bundesliga: 100,
-    "2-bundesliga": 0,
-    championsLeague: 100,
-    europaLeague: 0,
-    conferenceLeague: 0,
-    premierLeague: 100,
-    laLiga: 0,
-    serieA: 0,
-    ligue1: 0,
-    dfbPokal: 100,
-    nationalteam: 50,
+    name: "MagentaTV",
+    logo: "🔴",
+    monthlyPrice: 19.99,
+    yearlyPrice: 199.99,
+    competitions: {
+      "bundesliga": 50,
+      "2-bundesliga": 100,
+      "champions-league": 0,
+      "europa-league": 0,
+      "conference-league": 0,
+      "premier-league": 0,
+      "la-liga": 0,
+      "serie-a": 0,
+      "ligue-1": 0,
+      "dfb-pokal": 50,
+      "nationalteam": 20
+    },
     features: {
       fourK: true,
       multiDevice: true,
       liveReplay: true,
-      conference: true,
+      conference: false,
       catchUp: true,
       noAds: true,
       offline: false
     },
-    rating: 3.9,
+    rating: 3.5,
     popular: false
   }
 ];
 
 const leagues = [
-  { key: "bundesliga", name: "Bundesliga", icon: "🇩🇪", country: "Deutschland" },
-  { key: "2-bundesliga", name: "2. Bundesliga", icon: "🇩🇪", country: "Deutschland" },
-  { key: "championsLeague", name: "Champions League", icon: "🏆", country: "International" },
-  { key: "europaLeague", name: "Europa League", icon: "🥈", country: "International" },
-  { key: "conferenceLeague", name: "Conference League", icon: "🥉", country: "International" },
-  { key: "premierLeague", name: "Premier League", icon: "🏴󠁧󠁢󠁥󠁮󠁧󠁿", country: "England" },
-  { key: "laLiga", name: "La Liga", icon: "🇪🇸", country: "Spanien" },
-  { key: "serieA", name: "Serie A", icon: "🇮🇹", country: "Italien" },
-  { key: "ligue1", name: "Ligue 1", icon: "🇫🇷", country: "Frankreich" },
-  { key: "dfbPokal", name: "DFB-Pokal", icon: "🏆", country: "Deutschland" },
-  { key: "nationalteam", name: "Nationalmannschaft", icon: "🇩🇪", country: "Deutschland" }
+  { key: "bundesliga", name: "Bundesliga", icon: "🇩🇪" },
+  { key: "2-bundesliga", name: "2. Bundesliga", icon: "🇩🇪" },
+  { key: "champions-league", name: "Champions League", icon: "🏆" },
+  { key: "europa-league", name: "Europa League", icon: "🥈" },
+  { key: "conference-league", name: "Conference League", icon: "🥉" },
+  { key: "premier-league", name: "Premier League", icon: "🏴󠁧󠁢󠁥󠁮󠁧󠁿" },
+  { key: "la-liga", name: "La Liga", icon: "🇪🇸" },
+  { key: "serie-a", name: "Serie A", icon: "🇮🇹" },
+  { key: "ligue-1", name: "Ligue 1", icon: "🇫🇷" },
+  { key: "dfb-pokal", name: "DFB-Pokal", icon: "🏆" },
+  { key: "nationalteam", name: "Nationalmannschaft", icon: "🇩🇪" }
 ];
 
 const featureLabels = {
@@ -205,11 +217,15 @@ const featureLabels = {
 export const ProviderComparison = () => {
   const [selectedLeagues, setSelectedLeagues] = useState<string[]>([]);
   const [selectedFeatures, setSelectedFeatures] = useState<string[]>([]);
-  const [selectedCountries, setSelectedCountries] = useState<string[]>(["Deutschland", "International"]);
+  const [expandedProviders, setExpandedProviders] = useState<string[]>([]);
 
-  const filteredLeagues = leagues.filter(league => 
-    selectedCountries.length === 0 || selectedCountries.includes(league.country)
-  );
+  const toggleExpandProvider = (providerName: string) => {
+    setExpandedProviders(prev => 
+      prev.includes(providerName) 
+        ? prev.filter(name => name !== providerName)
+        : [...prev, providerName]
+    );
+  };
 
   const getPercentageColor = (percentage: number) => {
     if (percentage >= 100) return "text-green-600 bg-green-100";
@@ -223,8 +239,6 @@ export const ProviderComparison = () => {
     if (percentage === 0) return <X className="h-4 w-4" />;
     return <span className="text-xs font-bold">{percentage}%</span>;
   };
-
-  const countries = Array.from(new Set(leagues.map(league => league.country)));
 
   return (
     <div className="min-h-screen bg-gray-50 py-8">
@@ -250,34 +264,11 @@ export const ProviderComparison = () => {
                 </CardTitle>
               </CardHeader>
               <CardContent className="space-y-6">
-                {/* Country Filter */}
-                <div>
-                  <Label className="text-base font-medium mb-3 block">Länder/Regionen</Label>
-                  <div className="space-y-2">
-                    {countries.map(country => (
-                      <div key={country} className="flex items-center space-x-2">
-                        <Checkbox
-                          id={`country-${country}`}
-                          checked={selectedCountries.includes(country)}
-                          onCheckedChange={(checked) => {
-                            setSelectedCountries(prev => 
-                              checked 
-                                ? [...prev, country]
-                                : prev.filter(c => c !== country)
-                            );
-                          }}
-                        />
-                        <Label htmlFor={`country-${country}`} className="text-sm">{country}</Label>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-
-                {/* League Filter */}
+                {/* Competition Filter */}
                 <div>
                   <Label className="text-base font-medium mb-3 block">Wettbewerbe</Label>
                   <div className="space-y-2 max-h-64 overflow-y-auto">
-                    {filteredLeagues.map(league => (
+                    {leagues.map(league => (
                       <div key={league.key} className="flex items-center space-x-2">
                         <Checkbox
                           id={`league-${league.key}`}
@@ -327,7 +318,6 @@ export const ProviderComparison = () => {
                   onClick={() => {
                     setSelectedLeagues([]);
                     setSelectedFeatures([]);
-                    setSelectedCountries(["Deutschland", "International"]);
                   }}
                   className="w-full"
                 >
@@ -338,242 +328,145 @@ export const ProviderComparison = () => {
           </div>
 
           {/* Main Content */}
-          <div className="lg:col-span-3 space-y-8">
-            {/* Main Comparison Table */}
-            <Card>
-              <CardHeader>
-                <CardTitle>Anbieter-Übersicht</CardTitle>
-                <CardDescription>
-                  Vergleichen Sie Preise, Liga-Abdeckung und Features der wichtigsten Streaming-Dienste
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div className="overflow-x-auto">
-                  <table className="w-full">
-                    <thead>
-                      <tr className="border-b">
-                        <th className="text-left py-4 px-2 font-medium text-gray-900">Anbieter</th>
-                        <th className="text-center py-4 px-2 font-medium text-gray-900">Preis</th>
-                        {(selectedLeagues.length > 0 ? filteredLeagues.filter(league => selectedLeagues.includes(league.key)) : filteredLeagues.slice(0, 5)).map(league => (
-                          <th key={league.key} className="text-center py-4 px-2 font-medium text-gray-900 min-w-24">
-                            <div className="flex flex-col items-center">
-                              <span className="text-xl mb-1">{league.icon}</span>
-                              <span className="text-xs">{league.name}</span>
+          <div className="lg:col-span-3 space-y-6">
+            {providers.map((provider) => {
+              // Filter based on selected features
+              if (selectedFeatures.length > 0) {
+                const hasAllFeatures = selectedFeatures.every(feature => 
+                  provider.features[feature as keyof typeof provider.features]
+                );
+                if (!hasAllFeatures) return null;
+              }
+
+              const isExpanded = expandedProviders.includes(provider.name);
+              const displayLeagues = selectedLeagues.length > 0 
+                ? leagues.filter(league => selectedLeagues.includes(league.key))
+                : leagues;
+
+              return (
+                <Card key={provider.name} className="overflow-hidden">
+                  <CardHeader className="pb-4">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center space-x-4">
+                        <span className="text-3xl">{provider.logo}</span>
+                        <div>
+                          <div className="flex items-center space-x-2">
+                            <CardTitle className="text-xl">{provider.name}</CardTitle>
+                            {provider.popular && (
+                              <Badge variant="secondary" className="bg-orange-100 text-orange-800">
+                                <Star className="h-3 w-3 mr-1" />
+                                Beliebt
+                              </Badge>
+                            )}
+                          </div>
+                          <div className="flex items-center space-x-4 mt-1">
+                            <div className="text-lg font-bold text-green-600">€{provider.monthlyPrice}/Monat</div>
+                            <div className="flex items-center space-x-1">
+                              <Star className="h-4 w-4 text-yellow-500 fill-current" />
+                              <span className="text-sm font-medium">{provider.rating}</span>
                             </div>
-                          </th>
+                          </div>
+                        </div>
+                      </div>
+                      <div className="flex items-center space-x-2">
+                        <Button size="sm" className="bg-green-600 hover:bg-green-700">
+                          Zum Anbieter
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => toggleExpandProvider(provider.name)}
+                        >
+                          {isExpanded ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
+                        </Button>
+                      </div>
+                    </div>
+                  </CardHeader>
+
+                  <CardContent>
+                    {/* Quick overview */}
+                    <div className="flex flex-wrap gap-2 mb-4">
+                      {Object.entries(provider.features)
+                        .filter(([_, value]) => value)
+                        .slice(0, 4)
+                        .map(([key]) => (
+                          <Badge key={key} variant="secondary" className="text-xs">
+                            {featureLabels[key as keyof typeof featureLabels]}
+                          </Badge>
                         ))}
-                        <th className="text-center py-4 px-2 font-medium text-gray-900">Bewertung</th>
-                        <th className="text-center py-4 px-2 font-medium text-gray-900">Aktion</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {providers.map((provider, index) => {
-                        // Filter providers based on selected features
-                        if (selectedFeatures.length > 0) {
-                          const hasAllFeatures = selectedFeatures.every(feature => 
-                            provider.features[feature as keyof typeof provider.features]
-                          );
-                          if (!hasAllFeatures) return null;
-                        }
+                    </div>
 
-                        const displayLeagues = selectedLeagues.length > 0 
-                          ? filteredLeagues.filter(league => selectedLeagues.includes(league.key))
-                          : filteredLeagues.slice(0, 5);
+                    {/* League coverage overview */}
+                    <div className="grid grid-cols-2 md:grid-cols-4 gap-2 mb-4">
+                      {displayLeagues.slice(0, 8).map(league => (
+                        <div key={league.key} className="flex items-center space-x-2">
+                          <span className="text-sm">{league.icon}</span>
+                          <span className="text-xs text-gray-600 flex-1">{league.name}</span>
+                          <div className={`inline-flex items-center justify-center w-6 h-6 rounded-full text-xs ${
+                            getPercentageColor(provider.competitions[league.key as keyof typeof provider.competitions] as number)
+                          }`}>
+                            {getPercentageIcon(provider.competitions[league.key as keyof typeof provider.competitions] as number)}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
 
-                        return (
-                          <tr key={provider.name} className="border-b hover:bg-gray-50">
-                            <td className="py-4 px-2">
-                              <div className="flex items-center space-x-3">
-                                <span className="text-2xl">{provider.logo}</span>
-                                <div>
-                                  <div className="flex items-center space-x-2">
-                                    <span className="font-medium text-gray-900">{provider.name}</span>
-                                    {provider.popular && (
-                                      <Badge variant="secondary" className="bg-orange-100 text-orange-800">
-                                        <Star className="h-3 w-3 mr-1" />
-                                        Beliebt
-                                      </Badge>
-                                    )}
-                                  </div>
-                                  <div className="text-sm text-gray-500">
-                                    {Object.entries(provider.features)
-                                      .filter(([_, value]) => value)
-                                      .slice(0, 2)
-                                      .map(([key]) => featureLabels[key as keyof typeof featureLabels])
-                                      .join(", ")}
-                                  </div>
-                                </div>
+                    {/* Expanded content */}
+                    {isExpanded && (
+                      <div className="border-t pt-4 space-y-4">
+                        <div>
+                          <h4 className="font-medium mb-2">Alle Features:</h4>
+                          <div className="grid grid-cols-2 gap-2">
+                            {Object.entries(provider.features).map(([key, value]) => (
+                              <div key={key} className="flex items-center justify-between text-sm">
+                                <span>{featureLabels[key as keyof typeof featureLabels]}</span>
+                                {value ? (
+                                  <Check className="h-4 w-4 text-green-600" />
+                                ) : (
+                                  <X className="h-4 w-4 text-gray-400" />
+                                )}
                               </div>
-                            </td>
-                            <td className="py-4 px-2 text-center">
-                              <div>
-                                <div className="font-bold text-gray-900">€{provider.monthlyPrice}</div>
-                                <div className="text-xs text-gray-500">pro Monat</div>
-                                <div className="text-xs text-green-600">
-                                  €{(provider.yearlyPrice / 12).toFixed(2)} mit Jahresabo
-                                </div>
-                              </div>
-                            </td>
-                            {displayLeagues.map(league => (
-                              <td key={league.key} className="py-4 px-2 text-center">
-                                <div className={`inline-flex items-center justify-center w-8 h-8 rounded-full ${
-                                  getPercentageColor(provider[league.key as keyof typeof provider] as number)
-                                }`}>
-                                  {getPercentageIcon(provider[league.key as keyof typeof provider] as number)}
-                                </div>
-                              </td>
                             ))}
-                            <td className="py-4 px-2 text-center">
-                              <div className="flex items-center justify-center space-x-1">
-                                <Star className="h-4 w-4 text-yellow-500 fill-current" />
-                                <span className="font-medium">{provider.rating}</span>
+                          </div>
+                        </div>
+
+                        <div>
+                          <h4 className="font-medium mb-2">Vollständige Liga-Abdeckung:</h4>
+                          <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
+                            {leagues.map(league => (
+                              <div key={league.key} className="flex items-center justify-between text-sm">
+                                <div className="flex items-center space-x-2">
+                                  <span>{league.icon}</span>
+                                  <span>{league.name}</span>
+                                </div>
+                                <div className={`px-2 py-1 rounded text-xs font-medium ${
+                                  getPercentageColor(provider.competitions[league.key as keyof typeof provider.competitions] as number)
+                                }`}>
+                                  {provider.competitions[league.key as keyof typeof provider.competitions]}%
+                                </div>
                               </div>
-                            </td>
-                            <td className="py-4 px-2 text-center">
-                              <Button 
-                                size="sm" 
-                                className={index === 0 ? "bg-green-600 hover:bg-green-700" : ""}
-                                variant={index === 0 ? "default" : "outline"}
-                              >
-                                Zum Anbieter
-                              </Button>
-                            </td>
-                          </tr>
-                        );
-                      })}
-                    </tbody>
-                  </table>
-                </div>
-              </CardContent>
-            </Card>
+                            ))}
+                          </div>
+                        </div>
 
-            {/* League-specific Comparisons */}
-            <div className="grid md:grid-cols-2 gap-6">
-              <Card>
-                <CardHeader>
-                  <CardTitle className="flex items-center space-x-2">
-                    <span>🇩🇪</span>
-                    <span>Bundesliga Streaming</span>
-                  </CardTitle>
-                  <CardDescription>
-                    Wo Sie alle Bundesliga-Spiele sehen können
-                  </CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <div className="space-y-3">
-                    <div className="flex items-center justify-between p-3 bg-green-50 rounded-lg border border-green-200">
-                      <div className="flex items-center space-x-3">
-                        <span className="text-xl">🔵</span>
-                        <div>
-                          <div className="font-medium">Sky Sport</div>
-                          <div className="text-sm text-gray-600">Alle Spiele live</div>
+                        <div className="border-t pt-4">
+                          <div className="grid grid-cols-2 gap-4 text-center">
+                            <div>
+                              <div className="text-lg font-bold">€{provider.monthlyPrice}</div>
+                              <div className="text-xs text-gray-500">Monatlich</div>
+                            </div>
+                            <div>
+                              <div className="text-lg font-bold text-green-600">€{(provider.yearlyPrice / 12).toFixed(2)}</div>
+                              <div className="text-xs text-gray-500">Mit Jahresabo</div>
+                            </div>
+                          </div>
                         </div>
                       </div>
-                      <Badge className="bg-green-600">100%</Badge>
-                    </div>
-                    <div className="flex items-center justify-between p-3 bg-green-50 rounded-lg border border-green-200">
-                      <div className="flex items-center space-x-3">
-                        <span className="text-xl">🟣</span>
-                        <div>
-                          <div className="font-medium">WOW</div>
-                          <div className="text-sm text-gray-600">Alle Spiele live</div>
-                        </div>
-                      </div>
-                      <Badge className="bg-green-600">100%</Badge>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-
-              <Card>
-                <CardHeader>
-                  <CardTitle className="flex items-center space-x-2">
-                    <span>🥉</span>
-                    <span>Conference League</span>
-                  </CardTitle>
-                  <CardDescription>
-                    Der neue europäische Wettbewerb
-                  </CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <div className="space-y-3">
-                    <div className="flex items-center justify-between p-3 bg-red-50 rounded-lg border border-red-200">
-                      <div className="flex items-center space-x-3">
-                        <span className="text-xl">🔺</span>
-                        <div>
-                          <div className="font-medium">RTL+</div>
-                          <div className="text-sm text-gray-600">Alle Spiele exklusiv</div>
-                        </div>
-                      </div>
-                      <Badge className="bg-red-600">100%</Badge>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-            </div>
-
-            {/* Recommendation Boxes */}
-            <div className="grid md:grid-cols-3 gap-6">
-              <Card className="border-green-200 bg-green-50">
-                <CardHeader>
-                  <CardTitle className="text-green-800 flex items-center space-x-2">
-                    <TrendingUp className="h-5 w-5" />
-                    <span>Beste Gesamtlösung</span>
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="text-center">
-                    <div className="text-2xl mb-2">🔵 + 🟡</div>
-                    <div className="font-bold text-lg mb-1">Sky + DAZN</div>
-                    <div className="text-sm text-gray-600 mb-3">
-                      95% aller Top-Liga Spiele
-                    </div>
-                    <div className="text-lg font-bold text-green-600">€74.98/Monat</div>
-                    <Button className="w-full mt-3 bg-green-600 hover:bg-green-700">
-                      Kombination ansehen
-                    </Button>
-                  </div>
-                </CardContent>
-              </Card>
-
-              <Card className="border-blue-200 bg-blue-50">
-                <CardHeader>
-                  <CardTitle className="text-blue-800">Nur Bundesliga</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="text-center">
-                    <div className="text-2xl mb-2">🟣</div>
-                    <div className="font-bold text-lg mb-1">WOW</div>
-                    <div className="text-sm text-gray-600 mb-3">
-                      100% Bundesliga + Champions League
-                    </div>
-                    <div className="text-lg font-bold text-blue-600">€24.99/Monat</div>
-                    <Button variant="outline" className="w-full mt-3 border-blue-600 text-blue-600">
-                      Jetzt abonnieren
-                    </Button>
-                  </div>
-                </CardContent>
-              </Card>
-
-              <Card className="border-orange-200 bg-orange-50">
-                <CardHeader>
-                  <CardTitle className="text-orange-800">Budget-Option</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="text-center">
-                    <div className="text-2xl mb-2">🔶</div>
-                    <div className="font-bold text-lg mb-1">Amazon Prime</div>
-                    <div className="text-sm text-gray-600 mb-3">
-                      Champions League Highlights + Prime
-                    </div>
-                    <div className="text-lg font-bold text-orange-600">€8.99/Monat</div>
-                    <Button variant="outline" className="w-full mt-3 border-orange-600 text-orange-600">
-                      Jetzt testen
-                    </Button>
-                  </div>
-                </CardContent>
-              </Card>
-            </div>
+                    )}
+                  </CardContent>
+                </Card>
+              );
+            })}
           </div>
         </div>
       </div>

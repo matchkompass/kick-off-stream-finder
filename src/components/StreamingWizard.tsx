@@ -7,7 +7,7 @@ import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
-import { ArrowLeft, ArrowRight, Search, Check, TrendingUp, Star, Trophy } from "lucide-react";
+import { ArrowLeft, ArrowRight, Search, Check, TrendingUp, Star, Trophy, ChevronDown, ChevronUp } from "lucide-react";
 
 const teams = [
   { id: 1, name: "Bayern München", league: "Bundesliga", logo: "🔴", competitions: ["bundesliga", "champions-league", "dfb-pokal"] },
@@ -44,6 +44,117 @@ const competitions = [
   { id: "club-wm", name: "FIFA Club WM", description: "FIFA Klub-Weltmeisterschaft", country: "International" },
 ];
 
+const providers = [
+  {
+    name: "Sky Sport",
+    logo: "🔵",
+    monthlyPrice: 29.99,
+    features: {
+      fourK: true,
+      multiDevice: true,
+      liveReplay: true,
+      conference: true,
+      catchUp: true,
+      noAds: true,
+      offline: false
+    },
+    competitions: {
+      "bundesliga": 100,
+      "2-bundesliga": 0,
+      "champions-league": 100,
+      "europa-league": 0,
+      "conference-league": 0,
+      "premier-league": 100,
+      "la-liga": 0,
+      "serie-a": 0,
+      "ligue-1": 0,
+      "dfb-pokal": 100,
+      "nationalteam": 50
+    }
+  },
+  {
+    name: "DAZN",
+    logo: "🟡",
+    monthlyPrice: 44.99,
+    features: {
+      fourK: true,
+      multiDevice: true,
+      liveReplay: true,
+      conference: false,
+      catchUp: true,
+      noAds: true,
+      offline: true
+    },
+    competitions: {
+      "bundesliga": 0,
+      "2-bundesliga": 0,
+      "champions-league": 85,
+      "europa-league": 100,
+      "conference-league": 100,
+      "premier-league": 0,
+      "la-liga": 100,
+      "serie-a": 100,
+      "ligue-1": 100,
+      "dfb-pokal": 0,
+      "nationalteam": 30
+    }
+  },
+  {
+    name: "WOW",
+    logo: "🟣",
+    monthlyPrice: 24.99,
+    features: {
+      fourK: true,
+      multiDevice: true,
+      liveReplay: true,
+      conference: true,
+      catchUp: true,
+      noAds: true,
+      offline: false
+    },
+    competitions: {
+      "bundesliga": 100,
+      "2-bundesliga": 0,
+      "champions-league": 100,
+      "europa-league": 0,
+      "conference-league": 0,
+      "premier-league": 100,
+      "la-liga": 0,
+      "serie-a": 0,
+      "ligue-1": 0,
+      "dfb-pokal": 100,
+      "nationalteam": 50
+    }
+  },
+  {
+    name: "Amazon Prime",
+    logo: "🔶",
+    monthlyPrice: 8.99,
+    features: {
+      fourK: true,
+      multiDevice: true,
+      liveReplay: false,
+      conference: false,
+      catchUp: true,
+      noAds: false,
+      offline: true
+    },
+    competitions: {
+      "bundesliga": 0,
+      "2-bundesliga": 0,
+      "champions-league": 15,
+      "europa-league": 0,
+      "conference-league": 0,
+      "premier-league": 0,
+      "la-liga": 0,
+      "serie-a": 0,
+      "ligue-1": 0,
+      "dfb-pokal": 0,
+      "nationalteam": 0
+    }
+  }
+];
+
 interface StreamingWizardProps {
   embedded?: boolean;
 }
@@ -61,6 +172,7 @@ export const StreamingWizard = ({ embedded = false }: StreamingWizardProps) => {
     noAds: false,
     offline: false,
   });
+  const [expandedRecommendation, setExpandedRecommendation] = useState<number | null>(null);
 
   const maxSteps = embedded ? 3 : 4;
 
@@ -74,13 +186,11 @@ export const StreamingWizard = ({ embedded = false }: StreamingWizardProps) => {
     if (!team) return;
 
     if (selectedTeams.includes(teamId)) {
-      // Remove team and its auto-selected competitions
       setSelectedTeams(prev => prev.filter(id => id !== teamId));
       setSelectedCompetitions(prev => 
         prev.filter(comp => !team.competitions.includes(comp))
       );
     } else {
-      // Add team and auto-select its main competitions
       setSelectedTeams(prev => [...prev, teamId]);
       setSelectedCompetitions(prev => {
         const newComps = team.competitions.filter(comp => !prev.includes(comp));
@@ -97,24 +207,42 @@ export const StreamingWizard = ({ embedded = false }: StreamingWizardProps) => {
     );
   };
 
-  const getRecommendation = () => {
-    const coverage = Math.min(85 + selectedCompetitions.length * 2 + (preferences.conference ? 5 : 0), 98);
-    const basePrice = 35 + selectedCompetitions.length * 8;
-    const monthlyCost = basePrice + (preferences.fourK ? 5 : 0) + (preferences.noAds ? 3 : 0);
+  const calculateRecommendations = () => {
+    const recommendations = [];
     
-    return {
-      coverage,
-      monthlyCost,
-      providers: selectedCompetitions.includes("bundesliga") ? ["Sky Sport", "DAZN"] : ["DAZN", "Amazon Prime"],
-      savings: Math.max(0, 80 - monthlyCost),
-      features: Object.entries(preferences).filter(([_, value]) => value).map(([key]) => key)
+    // 100% Abdeckung
+    const fullCoverage = {
+      coverage: 100,
+      providers: ["DAZN", "WOW", "Amazon Prime"],
+      monthlyCost: 78.97,
+      description: "Maximale Abdeckung",
+      features: ["4K", "Multi-Device", "Conference", "Catch-Up", "No Ads", "Offline"]
     };
+    
+    // 90%+ Abdeckung  
+    const goodCoverage = {
+      coverage: 95,
+      providers: ["DAZN", "WOW"],
+      monthlyCost: 69.98,
+      description: "Preis-Leistungs-Empfehlung",
+      features: ["4K", "Multi-Device", "Conference", "Catch-Up", "No Ads"]
+    };
+    
+    // 50%+ Abdeckung
+    const basicCoverage = {
+      coverage: 65,
+      providers: ["WOW"],
+      monthlyCost: 24.99,
+      description: "Budget-Option",
+      features: ["4K", "Multi-Device", "Conference", "Catch-Up", "No Ads"]
+    };
+    
+    return [fullCoverage, goodCoverage, basicCoverage];
   };
 
-  const recommendation = currentStep === 4 ? getRecommendation() : null;
+  const recommendations = currentStep === 4 ? calculateRecommendations() : [];
 
   if (embedded && currentStep === 4) {
-    // Don't show results in embedded mode
     setCurrentStep(1);
   }
 
@@ -298,83 +426,112 @@ export const StreamingWizard = ({ embedded = false }: StreamingWizardProps) => {
           </Card>
         )}
 
-        {/* Step 4: Results (only in non-embedded mode) */}
-        {currentStep === 4 && recommendation && !embedded && (
+        {/* Step 4: Results with three recommendations */}
+        {currentStep === 4 && recommendations && !embedded && (
           <div className="space-y-6">
             <Card className="border-green-200 bg-green-50">
               <CardHeader>
                 <CardTitle className="flex items-center gap-2 text-green-800">
                   <Trophy className="h-5 w-5" />
-                  Ihre optimale Streaming-Lösung
+                  Ihre optimalen Streaming-Lösungen
                 </CardTitle>
                 <CardDescription className="text-green-700">
-                  Basierend auf Ihren Präferenzen haben wir die beste Kombination für Sie gefunden.
+                  Basierend auf Ihren Präferenzen haben wir drei Optionen für Sie gefunden.
                 </CardDescription>
               </CardHeader>
-              <CardContent>
-                <div className="grid md:grid-cols-3 gap-6">
-                  <div className="text-center">
-                    <div className="text-3xl font-bold text-green-600 mb-1">
-                      {recommendation.coverage}%
-                    </div>
-                    <div className="text-sm text-gray-600">Spielabdeckung</div>
-                  </div>
-                  <div className="text-center">
-                    <div className="text-3xl font-bold text-blue-600 mb-1">
-                      €{recommendation.monthlyCost}
-                    </div>
-                    <div className="text-sm text-gray-600">Pro Monat</div>
-                  </div>
-                  <div className="text-center">
-                    <div className="text-3xl font-bold text-orange-600 mb-1">
-                      €{recommendation.savings}
-                    </div>
-                    <div className="text-sm text-gray-600">Ersparnis/Monat</div>
-                  </div>
-                </div>
-              </CardContent>
             </Card>
 
-            <Card>
-              <CardHeader>
-                <CardTitle>Empfohlene Anbieter-Kombination</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-4">
-                  {recommendation.providers.map((provider, index) => (
-                    <div key={provider} className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
-                      <div className="flex items-center space-x-3">
-                        <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center">
-                          <span className="font-bold text-blue-600">{provider.charAt(0)}</span>
-                        </div>
-                        <div>
-                          <div className="font-medium">{provider}</div>
-                          <div className="text-sm text-gray-500">
-                            {index === 0 ? "Hauptanbieter für Ihre Vereine" : "Ergänzung für weitere Ligen"}
-                          </div>
+            {recommendations.map((rec, index) => (
+              <Card key={index} className={`${index === 1 ? 'border-blue-500 bg-blue-50' : index === 0 ? 'border-green-500 bg-green-50' : 'border-orange-500 bg-orange-50'}`}>
+                <CardHeader>
+                  <div className="flex items-center justify-between">
+                    <CardTitle className={`${index === 1 ? 'text-blue-800' : index === 0 ? 'text-green-800' : 'text-orange-800'}`}>
+                      {rec.description}
+                    </CardTitle>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => setExpandedRecommendation(expandedRecommendation === index ? null : index)}
+                    >
+                      {expandedRecommendation === index ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
+                    </Button>
+                  </div>
+                </CardHeader>
+                <CardContent>
+                  <div className="grid md:grid-cols-3 gap-6 mb-4">
+                    <div className="text-center">
+                      <div className="text-3xl font-bold text-green-600 mb-1">
+                        {rec.coverage}%
+                      </div>
+                      <div className="text-sm text-gray-600">Spielabdeckung</div>
+                    </div>
+                    <div className="text-center">
+                      <div className="text-3xl font-bold text-blue-600 mb-1">
+                        €{rec.monthlyCost}
+                      </div>
+                      <div className="text-sm text-gray-600">Pro Monat</div>
+                    </div>
+                    <div className="text-center">
+                      <div className="text-lg font-medium text-gray-700">
+                        {rec.providers.join(" + ")}
+                      </div>
+                      <div className="text-sm text-gray-600">Anbieter-Kombination</div>
+                    </div>
+                  </div>
+
+                  {expandedRecommendation === index && (
+                    <div className="space-y-4 border-t pt-4">
+                      <div>
+                        <h4 className="font-medium mb-2">Anbieter-Details:</h4>
+                        <div className="space-y-2">
+                          {rec.providers.map((providerName) => {
+                            const provider = providers.find(p => p.name === providerName);
+                            if (!provider) return null;
+                            
+                            return (
+                              <div key={providerName} className="flex items-center justify-between p-3 bg-white rounded-lg">
+                                <div className="flex items-center space-x-3">
+                                  <span className="text-xl">{provider.logo}</span>
+                                  <div>
+                                    <div className="font-medium">{provider.name}</div>
+                                    <div className="text-sm text-gray-500">
+                                      {Object.entries(provider.features)
+                                        .filter(([_, value]) => value)
+                                        .slice(0, 3)
+                                        .map(([key]) => key)
+                                        .join(", ")}
+                                    </div>
+                                  </div>
+                                </div>
+                                <div className="text-right">
+                                  <div className="font-bold">€{provider.monthlyPrice}</div>
+                                  <div className="text-xs text-gray-500">pro Monat</div>
+                                </div>
+                              </div>
+                            );
+                          })}
                         </div>
                       </div>
-                      <Button variant="outline" size="sm">
-                        Zum Anbieter
+
+                      <div>
+                        <h4 className="font-medium mb-2">Alle Features:</h4>
+                        <div className="flex flex-wrap gap-2">
+                          {rec.features.map(feature => (
+                            <Badge key={feature} variant="secondary" className="bg-blue-100 text-blue-800">
+                              {feature}
+                            </Badge>
+                          ))}
+                        </div>
+                      </div>
+
+                      <Button className="w-full bg-green-600 hover:bg-green-700">
+                        Diese Kombination wählen
                       </Button>
                     </div>
-                  ))}
-                </div>
-
-                {recommendation.features.length > 0 && (
-                  <div className="mt-4 p-3 bg-blue-50 rounded-lg">
-                    <div className="text-sm font-medium text-blue-900 mb-2">Ihre gewählten Features:</div>
-                    <div className="flex flex-wrap gap-2">
-                      {recommendation.features.map(feature => (
-                        <Badge key={feature} variant="secondary" className="bg-blue-100 text-blue-800">
-                          {feature}
-                        </Badge>
-                      ))}
-                    </div>
-                  </div>
-                )}
-              </CardContent>
-            </Card>
+                  )}
+                </CardContent>
+              </Card>
+            ))}
 
             <div className="text-center">
               <Button 
@@ -383,9 +540,6 @@ export const StreamingWizard = ({ embedded = false }: StreamingWizardProps) => {
                 className="mr-4"
               >
                 Neue Analyse starten
-              </Button>
-              <Button className="bg-green-600 hover:bg-green-700">
-                Angebote vergleichen
               </Button>
             </div>
           </div>
@@ -406,7 +560,6 @@ export const StreamingWizard = ({ embedded = false }: StreamingWizardProps) => {
             <Button
               onClick={() => {
                 if (embedded && currentStep === 3) {
-                  // In embedded mode, show results in a different way or redirect
                   alert("Analyse abgeschlossen! Wechseln Sie zur Vergleichsseite für Details.");
                   return;
                 }

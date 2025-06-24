@@ -1,15 +1,78 @@
-
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { ArrowDown, Search, Calculator, TrendingUp, Play, Shield, Clock, Users, Trophy, Target } from "lucide-react";
+import { ArrowDown, Search, Calculator, TrendingUp, Play, Shield, Clock, Users, Trophy, Target, Check, X } from "lucide-react";
 import { StreamingWizard } from "@/components/StreamingWizard";
 import { ProviderComparison } from "@/components/ProviderComparison";
 import { NewsSection } from "@/components/NewsSection";
 import { DealsSection } from "@/components/DealsSection";
 import { SavingsCalculator } from "@/components/SavingsCalculator";
 import { TeamLandingPage } from "@/components/TeamLandingPage";
+
+const popularCompetitions = [
+  {
+    name: "Bundesliga",
+    icon: "🇩🇪",
+    description: "Deutsche Meisterschaft",
+    totalGames: 306,
+    providers: [
+      { name: "Sky Sport", logo: "🔵", coverage: 100, price: 29.99 },
+      { name: "WOW", logo: "🟣", coverage: 100, price: 24.99 }
+    ]
+  },
+  {
+    name: "Champions League",
+    icon: "🏆",
+    description: "Europas Königsklasse",
+    totalGames: 189,
+    providers: [
+      { name: "Sky Sport", logo: "🔵", coverage: 100, price: 29.99 },
+      { name: "WOW", logo: "🟣", coverage: 100, price: 24.99 },
+      { name: "DAZN", logo: "🟡", coverage: 85, price: 44.99 },
+      { name: "Amazon Prime", logo: "🔶", coverage: 15, price: 8.99 }
+    ]
+  },
+  {
+    name: "Europa League",
+    icon: "🥈",
+    description: "Europäischer Zweitklassiger Wettbewerb",
+    totalGames: 141,
+    providers: [
+      { name: "DAZN", logo: "🟡", coverage: 100, price: 44.99 },
+      { name: "RTL+", logo: "🔺", coverage: 20, price: 6.99 }
+    ]
+  },
+  {
+    name: "Conference League",
+    icon: "🥉",
+    description: "UEFA Conference League",
+    totalGames: 141,
+    providers: [
+      { name: "RTL+", logo: "🔺", coverage: 100, price: 6.99 },
+      { name: "DAZN", logo: "🟡", coverage: 100, price: 44.99 }
+    ]
+  },
+  {
+    name: "Premier League",
+    icon: "🏴󠁧󠁢󠁥󠁮󠁧󠁿",
+    description: "Englische Eliteklasse",
+    totalGames: 380,
+    providers: [
+      { name: "Sky Sport", logo: "🔵", coverage: 100, price: 29.99 },
+      { name: "WOW", logo: "🟣", coverage: 100, price: 24.99 }
+    ]
+  },
+  {
+    name: "La Liga",
+    icon: "🇪🇸",
+    description: "Spanische Liga",
+    totalGames: 380,
+    providers: [
+      { name: "DAZN", logo: "🟡", coverage: 100, price: 44.99 }
+    ]
+  }
+];
 
 const Index = () => {
   const [activeSection, setActiveSection] = useState("home");
@@ -117,8 +180,60 @@ const Index = () => {
             </div>
           </section>
 
-          {/* Streaming Wizard Integration */}
+          {/* Beliebte Wettbewerbe */}
           <section className="py-16 bg-gray-50">
+            <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+              <div className="text-center mb-12">
+                <h2 className="text-3xl font-bold text-gray-900 mb-4">
+                  Beliebte Wettbewerbe & Abdeckung
+                </h2>
+                <p className="text-xl text-gray-600">
+                  Entdecken Sie, wo Ihre Lieblings-Wettbewerbe übertragen werden
+                </p>
+              </div>
+              
+              <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {popularCompetitions.map((competition) => (
+                  <Card key={competition.name} className="hover:shadow-lg transition-shadow">
+                    <CardHeader>
+                      <div className="flex items-center space-x-3 mb-2">
+                        <span className="text-2xl">{competition.icon}</span>
+                        <div>
+                          <CardTitle className="text-lg">{competition.name}</CardTitle>
+                          <CardDescription className="text-sm">{competition.description}</CardDescription>
+                        </div>
+                      </div>
+                      <div className="text-sm text-gray-500">
+                        {competition.totalGames} Spiele pro Saison
+                      </div>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="space-y-3">
+                        <h4 className="font-medium text-sm">Verfügbar bei:</h4>
+                        {competition.providers.map((provider) => (
+                          <div key={provider.name} className="flex items-center justify-between p-2 bg-gray-50 rounded">
+                            <div className="flex items-center space-x-2">
+                              <span className="text-lg">{provider.logo}</span>
+                              <span className="text-sm font-medium">{provider.name}</span>
+                            </div>
+                            <div className="flex items-center space-x-2">
+                              <Badge variant={provider.coverage === 100 ? "default" : provider.coverage >= 50 ? "secondary" : "outline"} className="text-xs">
+                                {provider.coverage}%
+                              </Badge>
+                              <span className="text-xs text-gray-600">€{provider.price}</span>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </CardContent>
+                  </Card>
+                ))}
+              </div>
+            </div>
+          </section>
+
+          {/* Streaming Wizard Integration */}
+          <section className="py-16 bg-white">
             <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
               <div className="text-center mb-8">
                 <h2 className="text-3xl font-bold text-gray-900 mb-4">

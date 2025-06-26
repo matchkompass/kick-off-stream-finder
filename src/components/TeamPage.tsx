@@ -43,7 +43,7 @@ export const TeamPage = ({ teamName, onBack }: TeamPageProps) => {
           <Card>
             <CardHeader>
               <div className="flex items-center space-x-4">
-                <span className="text-4xl" style={{ color: '#2563eb' }}>{teamData.logo}</span>
+                <span className="text-4xl">{teamData.logo}</span>
                 <div>
                   <CardTitle className="text-2xl md:text-3xl">{teamData.name}</CardTitle>
                   <CardDescription className="text-lg">{teamData.league}</CardDescription>

@@ -1,4 +1,3 @@
-
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -85,7 +84,7 @@ export const TeamLandingPage = ({ teamName, onBack }: TeamLandingPageProps) => {
           </Button>
           
           <div className="flex items-center space-x-4 mb-4">
-            <span className="text-6xl">{team.logo}</span>
+            <span className="text-6xl" style={{ color: '#2563eb' }}>{team.logo}</span>
             <div>
               <h1 className="text-4xl font-bold text-gray-900">{teamName}</h1>
               <p className="text-xl text-gray-600">{team.league}</p>

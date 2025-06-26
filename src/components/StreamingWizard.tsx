@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -6,7 +7,7 @@ import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
-import { ArrowLeft, ArrowRight, Search, Check, Trophy, ExternalLink } from "lucide-react";
+import { ArrowLeft, ArrowRight, Search, Check, Trophy, ExternalLink, Star } from "lucide-react";
 import { useClubs } from "@/hooks/useClubs";
 import { useLeagues } from "@/hooks/useLeagues";
 import { useStreamingProviders } from "@/hooks/useStreamingProviders";
@@ -49,11 +50,15 @@ export const StreamingWizard = ({ embedded = false }: StreamingWizardProps) => {
 
     if (selectedTeams.includes(teamId)) {
       setSelectedTeams(prev => prev.filter(id => id !== teamId));
+      // Remove competitions only if no other selected team has them
+      const otherSelectedTeams = teams.filter(t => selectedTeams.filter(id => id !== teamId).includes(t.id));
+      const otherCompetitions = otherSelectedTeams.flatMap(t => t.competitions);
       setSelectedCompetitions(prev => 
-        prev.filter(comp => !team.competitions.includes(comp))
+        prev.filter(comp => otherCompetitions.includes(comp))
       );
     } else {
       setSelectedTeams(prev => [...prev, teamId]);
+      // Add new competitions from this team
       setSelectedCompetitions(prev => {
         const newComps = team.competitions.filter(comp => !prev.includes(comp));
         return [...prev, ...newComps];
@@ -169,6 +174,19 @@ export const StreamingWizard = ({ embedded = false }: StreamingWizardProps) => {
     }
 
     return bestCombination;
+  };
+
+  const getPercentageColor = (percentage: number) => {
+    if (percentage >= 100) return "text-green-600 bg-green-100";
+    if (percentage >= 50) return "text-orange-600 bg-orange-100";
+    if (percentage > 0) return "text-yellow-600 bg-yellow-100";
+    return "text-gray-400 bg-gray-100";
+  };
+
+  const getPercentageIcon = (percentage: number) => {
+    if (percentage >= 100) return <Check className="h-4 w-4" />;
+    if (percentage === 0) return "0%";
+    return `${percentage}%`;
   };
 
   const recommendations = currentStep === 5 ? calculateRecommendations() : [];
@@ -332,8 +350,37 @@ export const StreamingWizard = ({ embedded = false }: StreamingWizardProps) => {
             </CardHeader>
             <CardContent>
               <div className="space-y-6">
+                {/* Auto-selected competitions from clubs */}
+                {selectedCompetitions.length > 0 && (
+                  <div>
+                    <h3 className="font-medium text-gray-900 mb-3">Wettbewerbe Ihrer Vereine</h3>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                      {competitions
+                        .filter(comp => selectedCompetitions.includes(comp.key))
+                        .map((competition) => (
+                          <div
+                            key={competition.key}
+                            onClick={() => toggleCompetition(competition.key)}
+                            className="p-3 border border-blue-500 bg-blue-50 rounded-lg cursor-pointer transition-all hover:shadow-sm"
+                          >
+                            <div className="flex items-center justify-between">
+                              <div>
+                                <div className="font-medium text-gray-900 text-sm">{competition.name}</div>
+                                <div className="text-xs text-gray-500">{competition.description}</div>
+                              </div>
+                              <Check className="h-4 w-4 text-blue-600" />
+                            </div>
+                          </div>
+                        ))}
+                    </div>
+                  </div>
+                )}
+
+                {/* All other competitions organized by country */}
                 {["Deutschland", "International", "England", "Spanien", "Italien", "Frankreich"].map(country => {
-                  const countryCompetitions = competitions.filter(comp => comp.country === country);
+                  const countryCompetitions = competitions.filter(comp => 
+                    comp.country === country && !selectedCompetitions.includes(comp.key)
+                  );
                   if (countryCompetitions.length === 0) return null;
                   
                   return (
@@ -344,20 +391,13 @@ export const StreamingWizard = ({ embedded = false }: StreamingWizardProps) => {
                           <div
                             key={competition.key}
                             onClick={() => toggleCompetition(competition.key)}
-                            className={`p-3 border rounded-lg cursor-pointer transition-all hover:shadow-sm ${
-                              selectedCompetitions.includes(competition.key)
-                                ? "border-blue-500 bg-blue-50"
-                                : "border-gray-200 hover:border-gray-300"
-                            }`}
+                            className="p-3 border border-gray-200 hover:border-gray-300 rounded-lg cursor-pointer transition-all hover:shadow-sm"
                           >
                             <div className="flex items-center justify-between">
                               <div>
                                 <div className="font-medium text-gray-900 text-sm">{competition.name}</div>
                                 <div className="text-xs text-gray-500">{competition.description}</div>
                               </div>
-                              {selectedCompetitions.includes(competition.key) && (
-                                <Check className="h-4 w-4 text-blue-600" />
-                              )}
                             </div>
                           </div>
                         ))}
@@ -459,7 +499,7 @@ export const StreamingWizard = ({ embedded = false }: StreamingWizardProps) => {
           </Card>
         )}
 
-        {/* Step 5: Results */}
+        {/* Step 5: Detailed Results */}
         {currentStep === 5 && recommendations && !embedded && (
           <div className="space-y-4 md:space-y-6">
             <Card className="border-green-200 bg-green-50">
@@ -512,24 +552,70 @@ export const StreamingWizard = ({ embedded = false }: StreamingWizardProps) => {
                   </div>
 
                   {rec.providerDetails && (
-                    <div className="space-y-3 border-t pt-4">
+                    <div className="space-y-4 border-t pt-4">
                       {rec.providerDetails.map((provider) => (
-                        <div key={provider.name} className="flex flex-col md:flex-row md:items-center justify-between p-3 bg-white rounded-lg space-y-2 md:space-y-0">
-                          <div className="flex items-center space-x-3">
-                            <span className="text-lg md:text-xl">{provider.logo}</span>
-                            <div>
-                              <div className="font-medium text-sm md:text-base">{provider.name}</div>
-                              <div className="text-xs md:text-sm text-gray-500">€{provider.monthlyPrice}/Monat</div>
+                        <div key={provider.name} className="bg-white rounded-lg p-4 space-y-4">
+                          <div className="flex flex-col md:flex-row md:items-center justify-between space-y-2 md:space-y-0">
+                            <div className="flex items-center space-x-3">
+                              <span className="text-lg md:text-xl">{provider.logo}</span>
+                              <div>
+                                <div className="font-medium text-sm md:text-base">{provider.name}</div>
+                                <div className="flex items-center space-x-2">
+                                  <div className="text-xs md:text-sm text-gray-500">€{provider.monthlyPrice}/Monat</div>
+                                  <div className="flex items-center space-x-1">
+                                    <Star className="h-3 w-3 text-yellow-500 fill-current" />
+                                    <span className="text-xs">4.0</span>
+                                  </div>
+                                </div>
+                              </div>
+                            </div>
+                            <Button 
+                              size="sm" 
+                              className="bg-green-600 hover:bg-green-700 text-xs md:text-sm px-2 md:px-3"
+                              onClick={() => window.open(provider.affiliateLink, '_blank')}
+                            >
+                              <ExternalLink className="h-3 w-3 md:h-4 md:w-4 mr-1" />
+                              Zu {provider.name}
+                            </Button>
+                          </div>
+
+                          {/* Detailed competition coverage */}
+                          <div>
+                            <h4 className="font-medium mb-2 text-sm">Liga-Abdeckung:</h4>
+                            <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
+                              {Object.entries(provider.competitions).map(([comp, coverage]) => {
+                                const competition = competitions.find(c => c.key === comp);
+                                if (!competition || coverage === 0) return null;
+                                
+                                return (
+                                  <div key={comp} className="flex items-center justify-between text-xs">
+                                    <div className="flex items-center space-x-1">
+                                      <span>{competition.icon}</span>
+                                      <span className="truncate">{competition.name}</span>
+                                    </div>
+                                    <div className={`px-2 py-1 rounded text-xs font-medium ${getPercentageColor(coverage as number)}`}>
+                                      {getPercentageIcon(coverage as number)}
+                                    </div>
+                                  </div>
+                                );
+                              })}
                             </div>
                           </div>
-                          <Button 
-                            size="sm" 
-                            className="bg-green-600 hover:bg-green-700 text-xs md:text-sm px-2 md:px-3"
-                            onClick={() => window.open(provider.affiliateLink, '_blank')}
-                          >
-                            <ExternalLink className="h-3 w-3 md:h-4 md:w-4 mr-1" />
-                            Zu {provider.name}
-                          </Button>
+
+                          {/* Features */}
+                          <div>
+                            <h4 className="font-medium mb-2 text-sm">Features:</h4>
+                            <div className="flex flex-wrap gap-1">
+                              {Object.entries(provider.features || {})
+                                .filter(([_, value]) => value)
+                                .slice(0, 4)
+                                .map(([key]) => (
+                                  <Badge key={key} variant="secondary" className="text-xs">
+                                    {featureLabels[key as keyof typeof featureLabels]}
+                                  </Badge>
+                                ))}
+                            </div>
+                          </div>
                         </div>
                       ))}
                     </div>

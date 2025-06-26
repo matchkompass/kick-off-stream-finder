@@ -1,18 +1,18 @@
 
 import { useState } from "react";
 import { Header } from "@/components/Header";
+import { HomePage } from "@/components/HomePage";
 import { StreamingWizard } from "@/components/StreamingWizard";
 import { ProviderComparison } from "@/components/ProviderComparison";
 import { NewsDeals } from "@/components/NewsDeals";
 import { FAQ } from "@/components/FAQ";
-import { FooterLinks } from "@/components/FooterLinks";
+import { Footer } from "@/components/Footer";
 import { TeamPage } from "@/components/TeamPage";
 import { ProviderPage } from "@/components/ProviderPage";
 import { LeaguePage } from "@/components/LeaguePage";
 
 const Index = () => {
-  const [currentPage, setCurrentPage] = useState<"home" | "team" | "provider" | "league">("home");
-  const [activeTab, setActiveTab] = useState("wizard");
+  const [currentPage, setCurrentPage] = useState<"home" | "wizard" | "vergleich" | "news" | "team" | "provider" | "league">("home");
   const [selectedItem, setSelectedItem] = useState<string>("");
 
   const handleItemSelect = (type: "club" | "league" | "provider", item: string) => {
@@ -44,6 +44,10 @@ const Index = () => {
   const handleBack = () => {
     setCurrentPage("home");
     setSelectedItem("");
+  };
+
+  const handleStartWizard = () => {
+    setCurrentPage("wizard");
   };
 
   if (currentPage === "team") {
@@ -105,34 +109,36 @@ const Index = () => {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <Header 
-        activeTab={activeTab} 
-        onTabChange={setActiveTab}
-        onItemSelect={handleItemSelect}
-      />
-
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        {activeTab === "wizard" && <StreamingWizard />}
-        {activeTab === "vergleich" && <ProviderComparison />}
-        {activeTab === "news" && <NewsDeals />}
-      </main>
-
-      {/* FAQ Section */}
-      <section className="py-12 bg-gray-100">
-        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
-          <FAQ 
-            title="Häufig gestellte Fragen"
-            questions={faqData[activeTab as keyof typeof faqData] || faqData.wizard}
+      {currentPage === "home" ? (
+        <HomePage onStartWizard={handleStartWizard} />
+      ) : (
+        <>
+          <Header 
+            activeTab={currentPage} 
+            onTabChange={setCurrentPage}
+            onItemSelect={handleItemSelect}
           />
-        </div>
-      </section>
 
-      {/* Footer Links */}
-      <FooterLinks 
-        onTeamClick={handleTeamClick}
-        onLeagueClick={handleLeagueClick}
-        onProviderClick={handleProviderClick}
-      />
+          <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+            {currentPage === "wizard" && <StreamingWizard />}
+            {currentPage === "vergleich" && <ProviderComparison />}
+            {currentPage === "news" && <NewsDeals />}
+          </main>
+
+          {/* FAQ Section */}
+          <section className="py-12 bg-gray-100">
+            <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+              <FAQ 
+                title="Häufig gestellte Fragen"
+                questions={faqData[currentPage as keyof typeof faqData] || faqData.wizard}
+              />
+            </div>
+          </section>
+        </>
+      )}
+
+      {/* Footer */}
+      <Footer />
     </div>
   );
 };

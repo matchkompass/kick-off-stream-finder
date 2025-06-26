@@ -31,7 +31,7 @@ export const transformLeagueData = (league: any) => ({
 });
 
 export const transformStreamingData = (provider: any) => ({
-  name: provider.provider_name || provider.name,
+  name: provider.name || provider.provider_name, // Use 'name' first, fallback to 'provider_name'
   logo: provider.logo_url || "🔵", // Fallback to emoji
   monthlyPrice: parseFloat(provider.monthly_price) || 0,
   yearlyPrice: parseFloat(provider.yearly_price) || 0,

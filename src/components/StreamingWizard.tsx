@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -7,222 +7,266 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { ArrowLeft, ArrowRight, Search, Check, Trophy, ExternalLink, Star } from "lucide-react";
-import { useClubs } from "@/hooks/useClubs";
+import { useStreamingOptimizer } from "@/hooks/useStreamingOptimizer";
+import { useClubSelection } from "@/hooks/useClubSelection";
 import { useLeagues } from "@/hooks/useLeagues";
 import { useStreamingProviders } from "@/hooks/useStreamingProviders";
-import { transformClubData, transformLeagueData, transformStreamingData } from "@/utils/dataTransformers";
 
 interface StreamingWizardProps {
   embedded?: boolean;
 }
 
 export const StreamingWizard = ({ embedded = false }: StreamingWizardProps) => {
-  const { data: clubsData, isLoading: clubsLoading } = useClubs();
+  const { clubs, selectedClubs, toggleClub, searchTerm, setSearchTerm, loading: clubsLoading, getSelectedClubNames } = useClubSelection();
   const { data: leaguesData, isLoading: leaguesLoading } = useLeagues();
   const { data: streamingData, isLoading: streamingLoading } = useStreamingProviders();
+  const { optimize, results, loading: optimizing, error, clearResults } = useStreamingOptimizer();
 
   const [currentStep, setCurrentStep] = useState(1);
-  const [selectedTeams, setSelectedTeams] = useState<number[]>([]);
-  const [selectedCompetitions, setSelectedCompetitions] = useState<string[]>([]);
+  const [selectedLeagues, setSelectedLeagues] = useState<number[]>([]);
   const [selectedFeatures, setSelectedFeatures] = useState<string[]>([]);
-  const [ownedProviders, setOwnedProviders] = useState<string[]>([]);
-  const [searchTerm, setSearchTerm] = useState("");
-  const [showAllClubs, setShowAllClubs] = useState(false);
+  const [ownedProviders, setOwnedProviders] = useState<number[]>([]);
 
-  const maxSteps = embedded ? 4 : 5;
+  // Step 2: Auto-select leagues based on selected clubs
+  useEffect(() => {
+    if (currentStep === 2 && leaguesData && selectedClubs.length > 0) {
+      // Find all leagues for selected clubs
+      const clubLeagues = new Set<number>();
+      leaguesData.forEach((league: any) => {
+        if (league.club_ids && league.club_ids.some((id: number) => selectedClubs.includes(id))) {
+          clubLeagues.add(league.league_id || league.id);
+        }
+      });
+      setSelectedLeagues(Array.from(clubLeagues));
+    }
+  }, [currentStep, leaguesData, selectedClubs]);
 
-  // Transform data
-  const teams = clubsData?.map(transformClubData) || [];
-  const competitions = leaguesData?.map(transformLeagueData) || [];
-  const providers = streamingData?.map(transformStreamingData) || [];
+  // Step 5: Run optimizer when entering results step
+  useEffect(() => {
+    if (currentStep === 5 && selectedClubs.length > 0) {
+      optimize(selectedClubs);
+    }
+    // eslint-disable-next-line
+  }, [currentStep]);
 
-  // Get top 10 most popular clubs for initial display
-  const topClubs = teams.slice(0, 10);
-  const filteredTeams = teams.filter(team => 
-    team.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    team.league.toLowerCase().includes(searchTerm.toLowerCase())
+  const maxSteps = 5;
+
+  // Step 1: Club Selection
+  const renderStep1 = () => (
+    <Card>
+      <CardHeader className="pb-4">
+        <CardTitle className="text-lg md:text-xl">Welche Vereine interessieren Sie?</CardTitle>
+        <CardDescription className="text-sm md:text-base">
+          Wählen Sie Ihre Lieblingsvereine aus. Die Top 10 werden angezeigt, weitere finden Sie über die Suche.
+        </CardDescription>
+      </CardHeader>
+      <CardContent className="space-y-4 md:space-y-6">
+        <div className="relative mb-4">
+          <Search className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
+          <Input
+            placeholder="Verein oder Liga suchen..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            className="pl-10"
+          />
+        </div>
+        <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
+          {clubs.map((club) => (
+            <div
+              key={club.club_id}
+              onClick={() => toggleClub(club.club_id)}
+              className={`p-3 border rounded-lg cursor-pointer transition-all hover:shadow-md ${
+                selectedClubs.includes(club.club_id)
+                  ? "border-green-500 bg-green-50"
+                  : "border-gray-200 hover:border-gray-300"
+              }`}
+            >
+              <div className="flex flex-col items-center space-y-2">
+                <div className="text-2xl flex items-center justify-center w-8 h-8 rounded-full">
+                  {club.logo_url ? <img src={club.logo_url} alt={club.name} className="w-8 h-8 rounded-full" /> : club.name[0]}
+                </div>
+                <div className="text-xs font-medium text-gray-900 text-center">{club.name}</div>
+              </div>
+            </div>
+          ))}
+        </div>
+        {selectedClubs.length > 0 && (
+          <div className="border-t pt-4">
+            <p className="text-sm text-gray-600 mb-2">Ausgewählte Vereine:</p>
+            <div className="flex flex-wrap gap-2">
+              {getSelectedClubNames().map((name) => (
+                <Badge key={name} variant="secondary" className="text-xs">
+                  {name}
+                </Badge>
+              ))}
+            </div>
+          </div>
+        )}
+      </CardContent>
+    </Card>
   );
 
-  const renderClubItem = (team: any, isTopClub = false) => (
-    <div
-      key={team.id}
-      onClick={() => toggleTeam(team.id)}
-      className={`p-3 border rounded-lg cursor-pointer transition-all hover:shadow-md ${
-        isTopClub ? "text-center" : ""
-      } ${
-        selectedTeams.includes(team.id)
-          ? "border-green-500 bg-green-50"
-          : "border-gray-200 hover:border-gray-300"
-      }`}
-    >
-      <div className={`flex ${isTopClub ? "flex-col" : ""} items-center space-${isTopClub ? "y" : "x"}-${isTopClub ? "2" : "3"}`}>
-        <div 
-          className="text-2xl flex items-center justify-center w-8 h-8 rounded-full"
-          style={team.primaryColor ? {
-            backgroundColor: team.primaryColor,
-            color: team.primaryColor === '#FFFFFF' || team.primaryColor === '#ffffff' ? '#000000' : '#ffffff',
-            border: `2px solid ${team.primaryColor}`
-          } : {}}
-        >
-          {team.logo}
+  // Step 2: League Selection
+  const renderStep2 = () => (
+    <Card>
+      <CardHeader>
+        <CardTitle>Ligen anpassen</CardTitle>
+        <CardDescription>
+          Basierend auf Ihren Vereinen wurden Ligen vorausgewählt. Sie können weitere hinzufügen oder entfernen.
+        </CardDescription>
+      </CardHeader>
+      <CardContent>
+        <div className="space-y-6">
+          <div>
+            <h3 className="font-medium text-gray-900 mb-3">Ligen Ihrer Vereine</h3>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+              {leaguesData && leaguesData.filter((l: any) => selectedLeagues.includes(l.league_id || l.id)).map((league: any) => (
+                <div
+                  key={league.league_id || league.id}
+                  onClick={() => setSelectedLeagues((prev) => prev.includes(league.league_id || league.id) ? prev.filter(id => id !== (league.league_id || league.id)) : [...prev, league.league_id || league.id])}
+                  className={`p-3 border ${selectedLeagues.includes(league.league_id || league.id) ? "border-blue-500 bg-blue-50" : "border-gray-200 hover:border-gray-300"} rounded-lg cursor-pointer transition-all hover:shadow-sm`}
+                >
+                  <div className="flex items-center space-x-2">
+                    <span>{league.icon || "🏆"}</span>
+                    <div>
+                      <div className="font-medium text-gray-900 text-sm">{league.name}</div>
+                      <div className="text-xs text-gray-500">{league.country}</div>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
         </div>
-        <div className={isTopClub ? "text-center" : "flex-1"}>
-          <div className={`${isTopClub ? "text-xs" : "text-sm"} font-medium text-gray-900`}>{team.name}</div>
-          {!isTopClub && <div className="text-xs text-gray-500">{team.league}</div>}
+      </CardContent>
+    </Card>
+  );
+
+  // Step 3: Features
+  const renderStep3 = () => (
+    <Card>
+      <CardHeader>
+        <CardTitle>Gewünschte Features</CardTitle>
+        <CardDescription>
+          Wählen Sie die Features aus, die für Sie wichtig sind.
+        </CardDescription>
+      </CardHeader>
+      <CardContent className="space-y-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          {[
+            { key: "conference", label: "Konferenz-Schaltungen", desc: "Mehrere Spiele gleichzeitig" },
+            { key: "catchUp", label: "Nachträglich schauen", desc: "Spiele on-demand abrufen" },
+            { key: "fourK", label: "4K Qualität", desc: "Ultra HD Streaming" },
+            { key: "multiDevice", label: "Mehrere Geräte", desc: "Parallel auf verschiedenen Geräten" },
+            { key: "noAds", label: "Werbefrei", desc: "Ohne Werbeunterbrechungen" },
+            { key: "offline", label: "Offline-Downloads", desc: "Spiele herunterladen" }
+          ].map(feature => (
+            <div key={feature.key} className="flex items-start space-x-3 p-3 border rounded-lg hover:bg-gray-50">
+              <Checkbox
+                id={feature.key}
+                checked={selectedFeatures.includes(feature.key)}
+                onCheckedChange={(checked) => {
+                  if (checked) {
+                    setSelectedFeatures(prev => [...prev, feature.key]);
+                  } else {
+                    setSelectedFeatures(prev => prev.filter(f => f !== feature.key));
+                  }
+                }}
+                className="mt-1"
+              />
+              <div>
+                <Label htmlFor={feature.key} className="font-medium cursor-pointer">{feature.label}</Label>
+                <div className="text-sm text-gray-500">{feature.desc}</div>
+              </div>
+            </div>
+          ))}
         </div>
-        {selectedTeams.includes(team.id) && (
-          <Check className="h-4 w-4 text-green-600" />
-        )}
+      </CardContent>
+    </Card>
+  );
+
+  // Step 4: Owned Providers
+  const renderStep4 = () => (
+    <Card>
+      <CardHeader>
+        <CardTitle>Bereits vorhandene Streaming-Dienste</CardTitle>
+        <CardDescription>
+          Wählen Sie die Streaming-Dienste aus, die Sie bereits besitzen.
+        </CardDescription>
+      </CardHeader>
+      <CardContent className="space-y-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          {streamingData && streamingData.map((provider: any) => (
+            <div
+              key={provider.streamer_id || provider.id}
+              onClick={() => setOwnedProviders((prev) => prev.includes(provider.streamer_id || provider.id) ? prev.filter(id => id !== (provider.streamer_id || provider.id)) : [...prev, provider.streamer_id || provider.id])}
+              className={`p-4 border rounded-lg cursor-pointer transition-all hover:shadow-md ${
+                ownedProviders.includes(provider.streamer_id || provider.id)
+                  ? "border-blue-500 bg-blue-50"
+                  : "border-gray-200 hover:border-gray-300"
+              }`}
+            >
+              <div className="flex items-center justify-between">
+                <div className="flex items-center space-x-3">
+                  <span className="text-xl">{provider.logo || provider.provider_name[0]}</span>
+                  <div>
+                    <div className="font-medium text-gray-900">{provider.provider_name}</div>
+                    <div className="text-sm text-gray-500">€{provider.monthly_price}/Monat</div>
+                  </div>
+                </div>
+                {ownedProviders.includes(provider.streamer_id || provider.id) && (
+                  <Check className="h-5 w-5 text-blue-600" />
+                )}
+              </div>
+            </div>
+          ))}
+        </div>
+      </CardContent>
+    </Card>
+  );
+
+  // Step 5: Results
+  const renderStep5 = () => (
+    <div className="space-y-4 md:space-y-6">
+      <Card className="border-green-200 bg-green-50">
+        <CardHeader className="pb-4">
+          <CardTitle className="flex items-center gap-2 text-green-800 text-lg md:text-xl">
+            <Trophy className="h-5 w-5" />
+            Ihre optimalen Streaming-Lösungen
+          </CardTitle>
+          <CardDescription className="text-green-700 text-sm md:text-base">
+            Basierend auf Ihren Präferenzen und bereits vorhandenen Diensten.
+          </CardDescription>
+        </CardHeader>
+      </Card>
+      {optimizing && <div className="text-center text-blue-600">Berechne optimale Kombinationen...</div>}
+      {error && <div className="text-center text-red-600">{error}</div>}
+      {results.length > 0 && (
+        <div className="space-y-4">
+          {results.map((result, idx) => (
+            <Card key={idx} className="border-blue-200 bg-blue-50">
+              <CardHeader>
+                <CardTitle className="text-blue-800 text-lg md:text-xl">
+                  {result.coveragePercentage}% Abdeckung für Ihre Auswahl
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="mb-2 font-medium">Anbieter: {result.providers.map((p: any) => p.provider_name).join(", ")}</div>
+                <div className="mb-2">Monatliche Kosten: <span className="font-bold">€{result.totalCost}</span></div>
+                <div className="mb-2">Abgedeckte Ligen: {result.coveredLeagues} von {result.totalLeagues}</div>
+                {/* Add more details as needed */}
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+      )}
+      <div className="text-center">
+        <Button onClick={() => { clearResults(); setCurrentStep(1); }} variant="outline" className="mr-4 text-sm md:text-base">
+          Neue Analyse starten
+        </Button>
       </div>
     </div>
   );
-
-  const toggleTeam = (teamId: number) => {
-    const team = teams.find(t => t.id === teamId);
-    if (!team) return;
-
-    if (selectedTeams.includes(teamId)) {
-      setSelectedTeams(prev => prev.filter(id => id !== teamId));
-      // Remove competitions only if no other selected team has them
-      const otherSelectedTeams = teams.filter(t => selectedTeams.filter(id => id !== teamId).includes(t.id));
-      const otherCompetitions = otherSelectedTeams.flatMap(t => t.competitions);
-      setSelectedCompetitions(prev => 
-        prev.filter(comp => otherCompetitions.includes(comp))
-      );
-    } else {
-      setSelectedTeams(prev => [...prev, teamId]);
-      // Add new competitions from this team
-      setSelectedCompetitions(prev => {
-        const newComps = team.competitions.filter(comp => !prev.includes(comp));
-        return [...prev, ...newComps];
-      });
-    }
-  };
-
-  const toggleCompetition = (competitionId: string) => {
-    setSelectedCompetitions(prev => 
-      prev.includes(competitionId)
-        ? prev.filter(id => id !== competitionId)
-        : [...prev, competitionId]
-    );
-  };
-
-  const calculateRecommendations = () => {
-    if (!providers.length) return [];
-
-    // Calculate coverage for each provider combination
-    const availableProviders = providers.filter(p => !ownedProviders.includes(p.name));
-    
-    const providerCoverage = availableProviders.map(provider => {
-      const relevantComps = selectedCompetitions.length > 0 ? selectedCompetitions : Object.keys(provider.competitions);
-      const totalCoverage = relevantComps.reduce((sum, comp) => {
-        return sum + (provider.competitions[comp as keyof typeof provider.competitions] || 0);
-      }, 0);
-      const avgCoverage = relevantComps.length > 0 ? Math.min(100, totalCoverage / relevantComps.length) : 0;
-      
-      return {
-        provider,
-        coverage: Math.round(avgCoverage),
-        price: provider.monthlyPrice
-      };
-    });
-
-    // Sort by coverage
-    providerCoverage.sort((a, b) => b.coverage - a.coverage);
-
-    const recommendations = [];
-    
-    // Perfect combination (100% coverage)
-    const perfectCombination = findBestCombination(providerCoverage, 100);
-    if (perfectCombination) {
-      recommendations.push({
-        ...perfectCombination,
-        description: "Perfekte Kombination (100% Abdeckung)",
-        type: "perfect"
-      });
-    }
-
-    // Above 90% coverage (cheapest)
-    const goodCombination = findBestCombination(providerCoverage, 90, true);
-    if (goodCombination && goodCombination.coverage >= 90) {
-      recommendations.push({
-        ...goodCombination,
-        description: "Günstigste Option (>90% Abdeckung)",
-        type: "good"
-      });
-    }
-
-    // Budget variant (>66% coverage)
-    const budgetCombination = findBestCombination(providerCoverage, 66, true);
-    if (budgetCombination && budgetCombination.coverage >= 66) {
-      recommendations.push({
-        ...budgetCombination,
-        description: "Budget-Variante (>66% Abdeckung)",
-        type: "budget"
-      });
-    }
-
-    return recommendations.slice(0, 3);
-  };
-
-  const findBestCombination = (providerCoverage: any[], minCoverage: number, prioritizePrice = false) => {
-    let bestCombination = null;
-    let bestScore = prioritizePrice ? Infinity : 0;
-
-    // Single provider
-    for (const single of providerCoverage) {
-      if (single.coverage >= minCoverage) {
-        const score = prioritizePrice ? single.price : single.coverage;
-        if ((prioritizePrice && score < bestScore) || (!prioritizePrice && score > bestScore)) {
-          bestCombination = {
-            coverage: single.coverage,
-            providers: [single.provider.name],
-            monthlyCost: single.price,
-            providerDetails: [single.provider]
-          };
-          bestScore = score;
-        }
-      }
-    }
-
-    // Two provider combinations
-    for (let i = 0; i < providerCoverage.length - 1; i++) {
-      for (let j = i + 1; j < providerCoverage.length; j++) {
-        const combinedCoverage = Math.min(100, providerCoverage[i].coverage + (providerCoverage[j].coverage * 0.6));
-        const combinedPrice = providerCoverage[i].price + providerCoverage[j].price;
-        
-        if (combinedCoverage >= minCoverage) {
-          const score = prioritizePrice ? combinedPrice : combinedCoverage;
-          if ((prioritizePrice && score < bestScore) || (!prioritizePrice && score > bestScore)) {
-            bestCombination = {
-              coverage: Math.round(combinedCoverage),
-              providers: [providerCoverage[i].provider.name, providerCoverage[j].provider.name],
-              monthlyCost: combinedPrice,
-              providerDetails: [providerCoverage[i].provider, providerCoverage[j].provider]
-            };
-            bestScore = score;
-          }
-        }
-      }
-    }
-
-    return bestCombination;
-  };
-
-  const getPercentageColor = (percentage: number) => {
-    if (percentage >= 100) return "text-green-600 bg-green-100";
-    if (percentage >= 50) return "text-orange-600 bg-orange-100";
-    if (percentage > 0) return "text-yellow-600 bg-yellow-100";
-    return "text-gray-400 bg-gray-100";
-  };
-
-  const getPercentageIcon = (percentage: number) => {
-    if (percentage >= 100) return <Check className="h-4 w-4" />;
-    if (percentage === 0) return "0%";
-    return `${percentage}%`;
-  };
-
-  const recommendations = currentStep === 5 ? calculateRecommendations() : [];
 
   if (clubsLoading || leaguesLoading || streamingLoading) {
     return (
@@ -233,10 +277,6 @@ export const StreamingWizard = ({ embedded = false }: StreamingWizardProps) => {
         </div>
       </div>
     );
-  }
-
-  if (embedded && currentStep === 5) {
-    setCurrentStep(1);
   }
 
   return (
@@ -254,388 +294,12 @@ export const StreamingWizard = ({ embedded = false }: StreamingWizardProps) => {
             <Progress value={(currentStep / maxSteps) * 100} className="h-2" />
           </div>
         )}
-
-        {embedded && (
-          <div className="mb-4 md:mb-6">
-            <Progress value={(currentStep / 4) * 100} className="h-2" />
-            <div className="text-center mt-2">
-              <span className="text-sm text-gray-600">Schritt {currentStep} von 4</span>
-            </div>
-          </div>
-        )}
-
-        {/* Step 1: Club Selection */}
-        {currentStep === 1 && (
-          <Card>
-            <CardHeader className="pb-4">
-              <CardTitle className="text-lg md:text-xl">Welche Vereine interessieren Sie?</CardTitle>
-              <CardDescription className="text-sm md:text-base">
-                Wählen Sie Ihre Lieblingsvereine aus. Die Top 10 werden angezeigt, weitere finden Sie über die Suche.
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-4 md:space-y-6">
-              {/* Top 10 Clubs Grid */}
-              <div>
-                <h3 className="font-medium text-gray-900 mb-3">Beliebteste Vereine</h3>
-                <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
-                  {topClubs.map((team) => renderClubItem(team, true))}
-                </div>
-              </div>
-
-              {/* Search Section */}
-              <div className="border-t pt-4">
-                <div className="flex items-center justify-between mb-3">
-                  <h3 className="font-medium text-gray-900">Weitere Vereine</h3>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => setShowAllClubs(!showAllClubs)}
-                  >
-                    {showAllClubs ? "Weniger anzeigen" : "Mehr anzeigen"}
-                  </Button>
-                </div>
-                
-                {showAllClubs && (
-                  <>
-                    <div className="relative mb-4">
-                      <Search className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
-                      <Input
-                        placeholder="Verein oder Liga suchen..."
-                        value={searchTerm}
-                        onChange={(e) => setSearchTerm(e.target.value)}
-                        className="pl-10"
-                      />
-                    </div>
-
-                    <div className="grid grid-cols-1 gap-3 max-h-60 overflow-y-auto">
-                      {(searchTerm ? filteredTeams : teams.slice(10)).map((team) => renderClubItem(team, false))}
-                    </div>
-                  </>
-                )}
-              </div>
-
-              {selectedTeams.length > 0 && (
-                <div className="border-t pt-4">
-                  <p className="text-sm text-gray-600 mb-2">Ausgewählte Vereine:</p>
-                  <div className="flex flex-wrap gap-2">
-                    {selectedTeams.map(teamId => {
-                      const team = teams.find(t => t.id === teamId);
-                      return (
-                        <Badge key={teamId} variant="secondary" className="text-xs">
-                          {team?.logo} {team?.name}
-                        </Badge>
-                      );
-                    })}
-                  </div>
-                </div>
-              )}
-            </CardContent>
-          </Card>
-        )}
-
-        {/* Step 2: Competition Selection */}
-        {currentStep === 2 && (
-          <Card>
-            <CardHeader>
-              <CardTitle>Wettbewerbe anpassen</CardTitle>
-              <CardDescription>
-                Basierend auf Ihren Vereinen wurden Wettbewerbe vorausgewählt. Sie können weitere hinzufügen oder entfernen.
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-6">
-                {/* Auto-selected competitions from clubs */}
-                {selectedCompetitions.length > 0 && (
-                  <div>
-                    <h3 className="font-medium text-gray-900 mb-3">Wettbewerbe Ihrer Vereine</h3>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                      {competitions
-                        .filter(comp => selectedCompetitions.includes(comp.key))
-                        .map((competition) => (
-                          <div
-                            key={competition.key}
-                            onClick={() => toggleCompetition(competition.key)}
-                            className="p-3 border border-blue-500 bg-blue-50 rounded-lg cursor-pointer transition-all hover:shadow-sm"
-                          >
-                            <div className="flex items-center justify-between">
-                              <div className="flex items-center space-x-2">
-                                <span>{competition.icon}</span>
-                                <div>
-                                  <div className="font-medium text-gray-900 text-sm">{competition.name}</div>
-                                  <div className="text-xs text-gray-500">{competition.gamesCount} Spiele</div>
-                                </div>
-                              </div>
-                              <Check className="h-4 w-4 text-blue-600" />
-                            </div>
-                          </div>
-                        ))}
-                    </div>
-                  </div>
-                )}
-
-                {/* All other competitions organized by country */}
-                {["Deutschland", "International", "England", "Spanien", "Italien", "Frankreich"].map(country => {
-                  const countryCompetitions = competitions.filter(comp => 
-                    comp.country === country && !selectedCompetitions.includes(comp.key)
-                  );
-                  if (countryCompetitions.length === 0) return null;
-                  
-                  return (
-                    <div key={country}>
-                      <h3 className="font-medium text-gray-900 mb-3">{country}</h3>
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                        {countryCompetitions.map((competition) => (
-                          <div
-                            key={competition.key}
-                            onClick={() => toggleCompetition(competition.key)}
-                            className="p-3 border border-gray-200 hover:border-gray-300 rounded-lg cursor-pointer transition-all hover:shadow-sm"
-                          >
-                            <div className="flex items-center justify-between">
-                              <div className="flex items-center space-x-2">
-                                <span>{competition.icon}</span>
-                                <div>
-                                  <div className="font-medium text-gray-900 text-sm">{competition.name}</div>
-                                  <div className="text-xs text-gray-500">{competition.gamesCount} Spiele</div>
-                                </div>
-                              </div>
-                            </div>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
-            </CardContent>
-          </Card>
-        )}
-
-        {/* Step 3: Features */}
-        {currentStep === 3 && (
-          <Card>
-            <CardHeader>
-              <CardTitle>Gewünschte Features</CardTitle>
-              <CardDescription>
-                Wählen Sie die Features aus, die für Sie wichtig sind.
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-6">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {[
-                  { key: "conference", label: "Konferenz-Schaltungen", desc: "Mehrere Spiele gleichzeitig" },
-                  { key: "catchUp", label: "Nachträglich schauen", desc: "Spiele on-demand abrufen" },
-                  { key: "fourK", label: "4K Qualität", desc: "Ultra HD Streaming" },
-                  { key: "multiDevice", label: "Mehrere Geräte", desc: "Parallel auf verschiedenen Geräten" },
-                  { key: "noAds", label: "Werbefrei", desc: "Ohne Werbeunterbrechungen" },
-                  { key: "offline", label: "Offline-Downloads", desc: "Spiele herunterladen" }
-                ].map(feature => (
-                  <div key={feature.key} className="flex items-start space-x-3 p-3 border rounded-lg hover:bg-gray-50">
-                    <Checkbox
-                      id={feature.key}
-                      checked={selectedFeatures.includes(feature.key)}
-                      onCheckedChange={(checked) => {
-                        if (checked) {
-                          setSelectedFeatures(prev => [...prev, feature.key]);
-                        } else {
-                          setSelectedFeatures(prev => prev.filter(f => f !== feature.key));
-                        }
-                      }}
-                      className="mt-1"
-                    />
-                    <div>
-                      <Label htmlFor={feature.key} className="font-medium cursor-pointer">{feature.label}</Label>
-                      <div className="text-sm text-gray-500">{feature.desc}</div>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </CardContent>
-          </Card>
-        )}
-
-        {/* Step 4: Owned Providers */}
-        {currentStep === 4 && (
-          <Card>
-            <CardHeader>
-              <CardTitle>Bereits vorhandene Streaming-Dienste</CardTitle>
-              <CardDescription>
-                Wählen Sie die Streaming-Dienste aus, die Sie bereits besitzen.
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-6">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {providers.map((provider) => (
-                  <div
-                    key={provider.name}
-                    onClick={() => {
-                      if (ownedProviders.includes(provider.name)) {
-                        setOwnedProviders(prev => prev.filter(p => p !== provider.name));
-                      } else {
-                        setOwnedProviders(prev => [...prev, provider.name]);
-                      }
-                    }}
-                    className={`p-4 border rounded-lg cursor-pointer transition-all hover:shadow-md ${
-                      ownedProviders.includes(provider.name)
-                        ? "border-blue-500 bg-blue-50"
-                        : "border-gray-200 hover:border-gray-300"
-                    }`}
-                  >
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center space-x-3">
-                        <span className="text-xl">{provider.logo}</span>
-                        <div>
-                          <div className="font-medium text-gray-900">{provider.name}</div>
-                          <div className="text-sm text-gray-500">€{provider.monthlyPrice}/Monat</div>
-                        </div>
-                      </div>
-                      {ownedProviders.includes(provider.name) && (
-                        <Check className="h-5 w-5 text-blue-600" />
-                      )}
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </CardContent>
-          </Card>
-        )}
-
-        {/* Step 5: Detailed Results */}
-        {currentStep === 5 && recommendations && !embedded && (
-          <div className="space-y-4 md:space-y-6">
-            <Card className="border-green-200 bg-green-50">
-              <CardHeader className="pb-4">
-                <CardTitle className="flex items-center gap-2 text-green-800 text-lg md:text-xl">
-                  <Trophy className="h-5 w-5" />
-                  Ihre optimalen Streaming-Lösungen
-                </CardTitle>
-                <CardDescription className="text-green-700 text-sm md:text-base">
-                  Basierend auf Ihren Präferenzen und bereits vorhandenen Diensten.
-                </CardDescription>
-              </CardHeader>
-            </Card>
-
-            {recommendations.map((rec, index) => (
-              <Card key={index} className={`${
-                rec.type === 'perfect' ? 'border-green-500 bg-green-50' : 
-                rec.type === 'good' ? 'border-blue-500 bg-blue-50' : 
-                'border-orange-500 bg-orange-50'
-              }`}>
-                <CardHeader className="pb-4">
-                  <CardTitle className={`${
-                    rec.type === 'perfect' ? 'text-green-800' : 
-                    rec.type === 'good' ? 'text-blue-800' : 
-                    'text-orange-800'
-                  } text-lg md:text-xl`}>
-                    {rec.description}
-                  </CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  <div className="grid grid-cols-3 gap-4 md:gap-6 text-center">
-                    <div>
-                      <div className="text-2xl md:text-3xl font-bold text-green-600 mb-1">
-                        {rec.coverage}%
-                      </div>
-                      <div className="text-xs md:text-sm text-gray-600">Spielabdeckung</div>
-                    </div>
-                    <div>
-                      <div className="text-2xl md:text-3xl font-bold text-blue-600 mb-1">
-                        €{rec.monthlyCost.toFixed(2)}
-                      </div>
-                      <div className="text-xs md:text-sm text-gray-600">Pro Monat</div>
-                    </div>
-                    <div>
-                      <div className="text-sm md:text-lg font-medium text-gray-700">
-                        {rec.providers.join(" + ")}
-                      </div>
-                      <div className="text-xs md:text-sm text-gray-600">Zusätzliche Anbieter</div>
-                    </div>
-                  </div>
-
-                  {rec.providerDetails && (
-                    <div className="space-y-4 border-t pt-4">
-                      {rec.providerDetails.map((provider) => (
-                        <div key={provider.name} className="bg-white rounded-lg p-4 space-y-4">
-                          <div className="flex flex-col md:flex-row md:items-center justify-between space-y-2 md:space-y-0">
-                            <div className="flex items-center space-x-3">
-                              <span className="text-lg md:text-xl">{provider.logo}</span>
-                              <div>
-                                <div className="font-medium text-sm md:text-base">{provider.name}</div>
-                                <div className="flex items-center space-x-2">
-                                  <div className="text-xs md:text-sm text-gray-500">€{provider.monthlyPrice}/Monat</div>
-                                  <div className="flex items-center space-x-1">
-                                    <Star className="h-3 w-3 text-yellow-500 fill-current" />
-                                    <span className="text-xs">4.0</span>
-                                  </div>
-                                </div>
-                              </div>
-                            </div>
-                            <Button 
-                              size="sm" 
-                              className="bg-green-600 hover:bg-green-700 text-xs md:text-sm px-2 md:px-3"
-                              onClick={() => window.open(provider.affiliateLink, '_blank')}
-                            >
-                              <ExternalLink className="h-3 w-3 md:h-4 md:w-4 mr-1" />
-                              Zu {provider.name}
-                            </Button>
-                          </div>
-
-                          {/* Detailed competition coverage */}
-                          <div>
-                            <h4 className="font-medium mb-2 text-sm">Liga-Abdeckung:</h4>
-                            <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
-                              {Object.entries(provider.competitions).map(([comp, coverage]) => {
-                                const competition = competitions.find(c => c.key === comp);
-                                if (!competition || coverage === 0) return null;
-                                
-                                return (
-                                  <div key={comp} className="flex items-center justify-between text-xs">
-                                    <div className="flex items-center space-x-1">
-                                      <span>{competition.icon}</span>
-                                      <span className="truncate">{competition.name}</span>
-                                    </div>
-                                    <div className={`px-2 py-1 rounded text-xs font-medium ${getPercentageColor(coverage as number)}`}>
-                                      {getPercentageIcon(coverage as number)}
-                                    </div>
-                                  </div>
-                                );
-                              })}
-                            </div>
-                          </div>
-
-                          {/* Features */}
-                          <div>
-                            <h4 className="font-medium mb-2 text-sm">Features:</h4>
-                            <div className="flex flex-wrap gap-1">
-                              {Object.entries(provider.features || {})
-                                .filter(([_, value]) => value)
-                                .slice(0, 4)
-                                .map(([key]) => (
-                                  <Badge key={key} variant="secondary" className="text-xs">
-                                    {featureLabels[key as keyof typeof featureLabels]}
-                                  </Badge>
-                                ))}
-                            </div>
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  )}
-                </CardContent>
-              </Card>
-            ))}
-
-            <div className="text-center">
-              <Button 
-                onClick={() => setCurrentStep(1)}
-                variant="outline" 
-                className="mr-4 text-sm md:text-base"
-              >
-                Neue Analyse starten
-              </Button>
-            </div>
-          </div>
-        )}
-
+        {/* Steps */}
+        {currentStep === 1 && renderStep1()}
+        {currentStep === 2 && renderStep2()}
+        {currentStep === 3 && renderStep3()}
+        {currentStep === 4 && renderStep4()}
+        {currentStep === 5 && renderStep5()}
         {/* Navigation */}
         {currentStep < maxSteps && (
           <div className="flex justify-between mt-6 md:mt-8">
@@ -648,18 +312,11 @@ export const StreamingWizard = ({ embedded = false }: StreamingWizardProps) => {
               <ArrowLeft className="mr-2 h-4 w-4" />
               Zurück
             </Button>
-            
             <Button
-              onClick={() => {
-                if (embedded && currentStep === 4) {
-                  alert("Analyse abgeschlossen! Wechseln Sie zur Vergleichsseite für Details.");
-                  return;
-                }
-                setCurrentStep(Math.min(maxSteps, currentStep + 1));
-              }}
+              onClick={() => setCurrentStep(Math.min(maxSteps, currentStep + 1))}
               disabled={
-                (currentStep === 1 && selectedTeams.length === 0) ||
-                (currentStep === 2 && selectedCompetitions.length === 0)
+                (currentStep === 1 && selectedClubs.length === 0) ||
+                (currentStep === 2 && selectedLeagues.length === 0)
               }
               className="bg-green-600 hover:bg-green-700 text-sm md:text-base px-3 md:px-4"
             >
@@ -671,14 +328,4 @@ export const StreamingWizard = ({ embedded = false }: StreamingWizardProps) => {
       </div>
     </div>
   );
-};
-
-const featureLabels = {
-  fourK: "4K Qualität",
-  multiDevice: "Mehrere Geräte",
-  liveReplay: "Live & Replay", 
-  conference: "Konferenz",
-  catchUp: "Nachträglich schauen",
-  noAds: "Werbefrei",
-  offline: "Offline-Downloads"
 };

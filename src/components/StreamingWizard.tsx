@@ -17,7 +17,7 @@ interface StreamingWizardProps {
 }
 
 export const StreamingWizard = ({ embedded = false }: StreamingWizardProps) => {
-  const { clubs, selectedClubs, toggleClub, searchTerm, setSearchTerm, loading: clubsLoading, getSelectedClubNames } = useClubSelection();
+  const { clubs, selectedClubs, toggleClub, searchTerm, setSearchTerm, loading: clubsLoading, getSelectedClubNames, leagueFilter, setLeagueFilter, availableLeagues } = useClubSelection();
   const { data: leaguesData, isLoading: leaguesLoading } = useLeagues();
   const { data: streamingData, isLoading: streamingLoading } = useStreamingProviders();
   const { optimize, results, loading: optimizing, error, clearResults } = useStreamingOptimizer();
@@ -57,18 +57,32 @@ export const StreamingWizard = ({ embedded = false }: StreamingWizardProps) => {
       <CardHeader className="pb-4">
         <CardTitle className="text-lg md:text-xl">Welche Vereine interessieren Sie?</CardTitle>
         <CardDescription className="text-sm md:text-base">
-          Wählen Sie Ihre Lieblingsvereine aus. Die Top 10 werden angezeigt, weitere finden Sie über die Suche.
+          Wählen Sie Ihre Lieblingsvereine aus. Die Top 10 werden angezeigt, weitere finden Sie über die Suche oder nach Liga.
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-4 md:space-y-6">
-        <div className="relative mb-4">
-          <Search className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
-          <Input
-            placeholder="Verein oder Liga suchen..."
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            className="pl-10"
-          />
+        <div className="flex flex-col md:flex-row md:items-center gap-2 mb-4">
+          <div className="relative flex-1">
+            <Search className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
+            <Input
+              placeholder="Verein oder Land suchen..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="pl-10"
+            />
+          </div>
+          <div>
+            <select
+              value={leagueFilter}
+              onChange={e => setLeagueFilter(e.target.value)}
+              className="border rounded px-2 py-2 text-sm"
+            >
+              <option value="">Alle Ligen</option>
+              {availableLeagues.map(league => (
+                <option key={league} value={league}>{league}</option>
+              ))}
+            </select>
+          </div>
         </div>
         <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
           {clubs.map((club) => (
@@ -86,6 +100,7 @@ export const StreamingWizard = ({ embedded = false }: StreamingWizardProps) => {
                   {club.logo_url ? <img src={club.logo_url} alt={club.name} className="w-8 h-8 rounded-full" /> : club.name[0]}
                 </div>
                 <div className="text-xs font-medium text-gray-900 text-center">{club.name}</div>
+                <div className="text-xs text-gray-500 text-center">{club.league}</div>
               </div>
             </div>
           ))}

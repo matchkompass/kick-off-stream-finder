@@ -6,7 +6,18 @@ interface Club {
   name: string;
   country: string;
   logo_url?: string;
+  league: string;
+  popularity_score: number;
 }
+
+const LEAGUE_ORDER = [
+  'Bundesliga',
+  'Champions League',
+  '2. Bundesliga',
+  'Premier League',
+  'La Liga',
+  'Serie A',
+];
 
 export function useClubSelection() {
   const supabase = useSupabaseClient();
@@ -14,6 +25,7 @@ export function useClubSelection() {
   const [selectedClubs, setSelectedClubs] = useState<number[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
+  const [leagueFilter, setLeagueFilter] = useState<string>('');
 
   useEffect(() => {
     fetchClubs();
@@ -23,8 +35,8 @@ export function useClubSelection() {
     try {
       const { data, error } = await supabase
         .from('clubs')
-        .select('club_id, name, country, logo_url')
-        .order('name');
+        .select('club_id, name, country, logo_url, league, popularity_score')
+        .order('popularity_score', { ascending: false });
 
       if (error) throw error;
       setClubs(data || []);
@@ -35,9 +47,26 @@ export function useClubSelection() {
     }
   };
 
-  const filteredClubs = clubs.filter(club =>
-    club.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    club.country.toLowerCase().includes(searchTerm.toLowerCase())
+  // Get unique leagues for dropdown
+  const availableLeagues = Array.from(new Set(clubs.map(club => club.league))).filter(Boolean);
+
+  // Sort clubs by league order and popularity
+  const sortedClubs = [...clubs].sort((a, b) => {
+    const leagueA = LEAGUE_ORDER.indexOf(a.league);
+    const leagueB = LEAGUE_ORDER.indexOf(b.league);
+    if (leagueA !== leagueB) {
+      if (leagueA === -1) return 1;
+      if (leagueB === -1) return -1;
+      return leagueA - leagueB;
+    }
+    // If same league, sort by popularity
+    return (b.popularity_score || 0) - (a.popularity_score || 0);
+  });
+
+  // Filter by search and league
+  const filteredClubs = sortedClubs.filter(club =>
+    (searchTerm === '' || club.name.toLowerCase().includes(searchTerm.toLowerCase()) || club.country.toLowerCase().includes(searchTerm.toLowerCase())) &&
+    (leagueFilter === '' || club.league === leagueFilter)
   );
 
   const toggleClub = (clubId: number) => {
@@ -66,6 +95,9 @@ export function useClubSelection() {
     setSearchTerm,
     toggleClub,
     clearSelection,
-    getSelectedClubNames
+    getSelectedClubNames,
+    leagueFilter,
+    setLeagueFilter,
+    availableLeagues
   };
-} 
+}

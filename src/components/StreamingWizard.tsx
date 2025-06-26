@@ -7,190 +7,20 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { ArrowLeft, ArrowRight, Search, Check, TrendingUp, Star, Trophy, ChevronDown, ChevronUp, ExternalLink } from "lucide-react";
-
-const teams = [
-  { id: 1, name: "Bayern München", league: "Bundesliga", logo: "🔴", competitions: ["bundesliga", "champions-league", "dfb-pokal"] },
-  { id: 2, name: "Borussia Dortmund", league: "Bundesliga", logo: "🟡", competitions: ["bundesliga", "champions-league", "dfb-pokal"] },
-  { id: 3, name: "Real Madrid", league: "La Liga", logo: "⚪", competitions: ["la-liga", "champions-league", "copa-del-rey"] },
-  { id: 4, name: "FC Barcelona", league: "La Liga", logo: "🔵", competitions: ["la-liga", "europa-league", "copa-del-rey"] },
-  { id: 5, name: "Manchester City", league: "Premier League", logo: "🔵", competitions: ["premier-league", "champions-league", "fa-cup"] },
-  { id: 6, name: "Liverpool FC", league: "Premier League", logo: "🔴", competitions: ["premier-league", "champions-league", "fa-cup"] },
-  { id: 7, name: "Juventus Turin", league: "Serie A", logo: "⚫", competitions: ["serie-a", "europa-league", "coppa-italia"] },
-  { id: 8, name: "AC Mailand", league: "Serie A", logo: "🔴", competitions: ["serie-a", "champions-league", "coppa-italia"] },
-  { id: 9, name: "SC Freiburg", league: "Bundesliga", logo: "🔴", competitions: ["bundesliga", "dfb-pokal"] },
-  { id: 10, name: "1. FC Köln", league: "2. Bundesliga", logo: "🔴", competitions: ["2-bundesliga", "dfb-pokal"] },
-  { id: 11, name: "Hamburger SV", league: "2. Bundesliga", logo: "🔵", competitions: ["2-bundesliga", "dfb-pokal"] },
-  { id: 12, name: "Deutschland", league: "Nationalmannschaft", logo: "🇩🇪", competitions: ["nationalteam", "euro", "wm"] },
-];
-
-const competitions = [
-  { id: "bundesliga", name: "Bundesliga", description: "Deutsche Meisterschaft", country: "Deutschland" },
-  { id: "2-bundesliga", name: "2. Bundesliga", description: "Deutsche Zweitliga", country: "Deutschland" },
-  { id: "champions-league", name: "Champions League", description: "Europas Königsklasse", country: "International" },
-  { id: "europa-league", name: "Europa League", description: "Europäischer Pokal", country: "International" },
-  { id: "conference-league", name: "Conference League", description: "UEFA Conference League", country: "International" },
-  { id: "premier-league", name: "Premier League", description: "Englische Liga", country: "England" },
-  { id: "la-liga", name: "La Liga", description: "Spanische Liga", country: "Spanien" },
-  { id: "serie-a", name: "Serie A", description: "Italienische Liga", country: "Italien" },
-  { id: "ligue-1", name: "Ligue 1", description: "Französische Liga", country: "Frankreich" },
-  { id: "dfb-pokal", name: "DFB-Pokal", description: "Deutscher Pokal", country: "Deutschland" },
-  { id: "fa-cup", name: "FA Cup", description: "Englischer Pokal", country: "England" },
-  { id: "copa-del-rey", name: "Copa del Rey", description: "Spanischer Pokal", country: "Spanien" },
-  { id: "coppa-italia", name: "Coppa Italia", description: "Italienischer Pokal", country: "Italien" },
-  { id: "nationalteam", name: "Nationalmannschaft", description: "Deutschland & internationale Spiele", country: "International" },
-  { id: "euro", name: "Europameisterschaft", description: "UEFA EURO", country: "International" },
-  { id: "wm", name: "Weltmeisterschaft", description: "FIFA WM", country: "International" },
-  { id: "club-wm", name: "FIFA Club WM", description: "FIFA Klub-Weltmeisterschaft", country: "International" },
-];
-
-const providers = [
-  {
-    name: "Sky Sport",
-    logo: "🔵",
-    monthlyPrice: 29.99,
-    affiliateLink: "https://sky.de/affiliate",
-    features: {
-      fourK: true,
-      multiDevice: true,
-      liveReplay: true,
-      conference: true,
-      catchUp: true,
-      noAds: true,
-      offline: false
-    },
-    competitions: {
-      "bundesliga": 100,
-      "2-bundesliga": 0,
-      "champions-league": 100,
-      "europa-league": 0,
-      "conference-league": 0,
-      "premier-league": 100,
-      "la-liga": 0,
-      "serie-a": 0,
-      "ligue-1": 0,
-      "dfb-pokal": 100,
-      "nationalteam": 50
-    }
-  },
-  {
-    name: "DAZN",
-    logo: "🟡",
-    monthlyPrice: 44.99,
-    affiliateLink: "https://dazn.com/affiliate",
-    features: {
-      fourK: true,
-      multiDevice: true,
-      liveReplay: true,
-      conference: false,
-      catchUp: true,
-      noAds: true,
-      offline: true
-    },
-    competitions: {
-      "bundesliga": 0,
-      "2-bundesliga": 0,
-      "champions-league": 85,
-      "europa-league": 100,
-      "conference-league": 100,
-      "premier-league": 0,
-      "la-liga": 100,
-      "serie-a": 100,
-      "ligue-1": 100,
-      "dfb-pokal": 0,
-      "nationalteam": 30
-    }
-  },
-  {
-    name: "WOW",
-    logo: "🟣",
-    monthlyPrice: 24.99,
-    affiliateLink: "https://wow.de/affiliate",
-    features: {
-      fourK: true,
-      multiDevice: true,
-      liveReplay: true,
-      conference: true,
-      catchUp: true,
-      noAds: true,
-      offline: false
-    },
-    competitions: {
-      "bundesliga": 100,
-      "2-bundesliga": 0,
-      "champions-league": 100,
-      "europa-league": 0,
-      "conference-league": 0,
-      "premier-league": 100,
-      "la-liga": 0,
-      "serie-a": 0,
-      "ligue-1": 0,
-      "dfb-pokal": 100,
-      "nationalteam": 50
-    }
-  },
-  {
-    name: "Amazon Prime",
-    logo: "🔶",
-    monthlyPrice: 8.99,
-    affiliateLink: "https://amazon.de/prime/affiliate",
-    features: {
-      fourK: true,
-      multiDevice: true,
-      liveReplay: false,
-      conference: false,
-      catchUp: true,
-      noAds: false,
-      offline: true
-    },
-    competitions: {
-      "bundesliga": 0,
-      "2-bundesliga": 0,
-      "champions-league": 15,
-      "europa-league": 0,
-      "conference-league": 0,
-      "premier-league": 0,
-      "la-liga": 0,
-      "serie-a": 0,
-      "ligue-1": 0,
-      "dfb-pokal": 0,
-      "nationalteam": 0
-    }
-  },
-  {
-    name: "RTL+",
-    logo: "🔺",
-    monthlyPrice: 6.99,
-    affiliateLink: "https://rtlplus.de/affiliate",
-    features: {
-      fourK: false,
-      multiDevice: true,
-      liveReplay: true,
-      conference: false,
-      catchUp: true,
-      noAds: false,
-      offline: true
-    },
-    competitions: {
-      "bundesliga": 0,
-      "2-bundesliga": 0,
-      "champions-league": 0,
-      "europa-league": 20,
-      "conference-league": 100,
-      "premier-league": 0,
-      "la-liga": 0,
-      "serie-a": 0,
-      "ligue-1": 0,
-      "dfb-pokal": 0,
-      "nationalteam": 0
-    }
-  }
-];
+import { useClubs } from "@/hooks/useClubs";
+import { useLeagues } from "@/hooks/useLeagues";
+import { useStreamingProviders } from "@/hooks/useStreamingProviders";
+import { transformClubData, transformLeagueData, transformStreamingData } from "@/utils/dataTransformers";
 
 interface StreamingWizardProps {
   embedded?: boolean;
 }
 
 export const StreamingWizard = ({ embedded = false }: StreamingWizardProps) => {
+  const { data: clubsData, isLoading: clubsLoading } = useClubs();
+  const { data: leaguesData, isLoading: leaguesLoading } = useLeagues();
+  const { data: streamingData, isLoading: streamingLoading } = useStreamingProviders();
+
   const [currentStep, setCurrentStep] = useState(1);
   const [selectedTeams, setSelectedTeams] = useState<number[]>([]);
   const [selectedCompetitions, setSelectedCompetitions] = useState<string[]>([]);
@@ -206,6 +36,11 @@ export const StreamingWizard = ({ embedded = false }: StreamingWizardProps) => {
   const [expandedRecommendation, setExpandedRecommendation] = useState<number | null>(null);
 
   const maxSteps = embedded ? 3 : 4;
+
+  // Transform data
+  const teams = clubsData?.map(transformClubData) || [];
+  const competitions = leaguesData?.map(transformLeagueData) || [];
+  const providers = streamingData?.map(transformStreamingData) || [];
 
   const filteredTeams = teams.filter(team => 
     team.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -239,39 +74,80 @@ export const StreamingWizard = ({ embedded = false }: StreamingWizardProps) => {
   };
 
   const calculateRecommendations = () => {
+    if (!providers.length) return [];
+
+    // Calculate coverage for each provider based on selected competitions
+    const providerCoverage = providers.map(provider => {
+      const relevantComps = selectedCompetitions.length > 0 ? selectedCompetitions : Object.keys(provider.competitions);
+      const totalCoverage = relevantComps.reduce((sum, comp) => {
+        return sum + (provider.competitions[comp as keyof typeof provider.competitions] || 0);
+      }, 0);
+      const avgCoverage = relevantComps.length > 0 ? totalCoverage / relevantComps.length : 0;
+      
+      return {
+        provider,
+        coverage: Math.round(avgCoverage),
+        price: provider.monthlyPrice
+      };
+    });
+
+    // Sort by coverage
+    providerCoverage.sort((a, b) => b.coverage - a.coverage);
+
     const recommendations = [];
     
-    // 100% Abdeckung
-    const fullCoverage = {
-      coverage: 100,
-      providers: ["DAZN", "WOW", "Amazon Prime"],
-      monthlyCost: 78.97,
-      description: "Maximale Abdeckung",
-      features: ["4K", "Multi-Device", "Conference", "Catch-Up", "No Ads", "Offline"]
-    };
-    
-    // 90%+ Abdeckung  
-    const goodCoverage = {
-      coverage: 95,
-      providers: ["DAZN", "WOW"],
-      monthlyCost: 69.98,
-      description: "Preis-Leistungs-Empfehlung",
-      features: ["4K", "Multi-Device", "Conference", "Catch-Up", "No Ads"]
-    };
-    
-    // 50%+ Abdeckung
-    const basicCoverage = {
-      coverage: 65,
-      providers: ["WOW"],
-      monthlyCost: 24.99,
-      description: "Budget-Option",
-      features: ["4K", "Multi-Device", "Conference", "Catch-Up", "No Ads"]
-    };
-    
-    return [fullCoverage, goodCoverage, basicCoverage];
+    // Find best single provider (highest coverage)
+    const bestSingle = providerCoverage[0];
+    if (bestSingle) {
+      recommendations.push({
+        coverage: bestSingle.coverage,
+        providers: [bestSingle.provider.name],
+        monthlyCost: bestSingle.price,
+        description: bestSingle.coverage >= 90 ? "Beste Einzellösung" : "Budget-Option",
+        features: Object.entries(bestSingle.provider.features)
+          .filter(([_, value]) => value)
+          .map(([key]) => featureLabels[key as keyof typeof featureLabels] || key),
+        providerDetails: [bestSingle.provider]
+      });
+    }
+
+    // Find best two-provider combination
+    const topProviders = providerCoverage.slice(0, 3);
+    for (let i = 0; i < topProviders.length - 1; i++) {
+      for (let j = i + 1; j < topProviders.length; j++) {
+        const combinedCoverage = Math.min(100, topProviders[i].coverage + topProviders[j].coverage * 0.5);
+        const combinedPrice = topProviders[i].price + topProviders[j].price;
+        
+        if (combinedCoverage > (recommendations[0]?.coverage || 0)) {
+          recommendations.unshift({
+            coverage: Math.round(combinedCoverage),
+            providers: [topProviders[i].provider.name, topProviders[j].provider.name],
+            monthlyCost: combinedPrice,
+            description: "Maximale Abdeckung",
+            features: ["4K", "Multi-Device", "Conference", "Catch-Up", "No Ads"],
+            providerDetails: [topProviders[i].provider, topProviders[j].provider]
+          });
+          break;
+        }
+      }
+      if (recommendations.length >= 2) break;
+    }
+
+    return recommendations.slice(0, 3);
   };
 
   const recommendations = currentStep === 4 ? calculateRecommendations() : [];
+
+  if (clubsLoading || leaguesLoading || streamingLoading) {
+    return (
+      <div className="min-h-screen bg-gray-50 py-8 flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-green-600 mx-auto"></div>
+          <p className="mt-4 text-gray-600">Lade Daten...</p>
+        </div>
+      </div>
+    );
+  }
 
   if (embedded && currentStep === 4) {
     setCurrentStep(1);
@@ -387,10 +263,10 @@ export const StreamingWizard = ({ embedded = false }: StreamingWizardProps) => {
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                         {countryCompetitions.map((competition) => (
                           <div
-                            key={competition.id}
-                            onClick={() => toggleCompetition(competition.id)}
+                            key={competition.key}
+                            onClick={() => toggleCompetition(competition.key)}
                             className={`p-3 border rounded-lg cursor-pointer transition-all hover:shadow-sm ${
-                              selectedCompetitions.includes(competition.id)
+                              selectedCompetitions.includes(competition.key)
                                 ? "border-blue-500 bg-blue-50"
                                 : "border-gray-200 hover:border-gray-300"
                             }`}
@@ -400,7 +276,7 @@ export const StreamingWizard = ({ embedded = false }: StreamingWizardProps) => {
                                 <div className="font-medium text-gray-900 text-sm">{competition.name}</div>
                                 <div className="text-xs text-gray-500">{competition.description}</div>
                               </div>
-                              {selectedCompetitions.includes(competition.id) && (
+                              {selectedCompetitions.includes(competition.key) && (
                                 <Check className="h-4 w-4 text-blue-600" />
                               )}
                             </div>
@@ -467,16 +343,16 @@ export const StreamingWizard = ({ embedded = false }: StreamingWizardProps) => {
                   Ihre optimalen Streaming-Lösungen
                 </CardTitle>
                 <CardDescription className="text-green-700 text-sm md:text-base">
-                  Basierend auf Ihren Präferenzen haben wir drei Optionen für Sie gefunden.
+                  Basierend auf Ihren Präferenzen haben wir {recommendations.length} Optionen für Sie gefunden.
                 </CardDescription>
               </CardHeader>
             </Card>
 
             {recommendations.map((rec, index) => (
-              <Card key={index} className={`${index === 1 ? 'border-blue-500 bg-blue-50' : index === 0 ? 'border-green-500 bg-green-50' : 'border-orange-500 bg-orange-50'}`}>
+              <Card key={index} className={`${index === 0 ? 'border-green-500 bg-green-50' : index === 1 ? 'border-blue-500 bg-blue-50' : 'border-orange-500 bg-orange-50'}`}>
                 <CardHeader className="pb-4">
                   <div className="flex items-center justify-between">
-                    <CardTitle className={`${index === 1 ? 'text-blue-800' : index === 0 ? 'text-green-800' : 'text-orange-800'} text-lg md:text-xl`}>
+                    <CardTitle className={`${index === 0 ? 'text-green-800' : index === 1 ? 'text-blue-800' : 'text-orange-800'} text-lg md:text-xl`}>
                       {rec.description}
                     </CardTitle>
                     <Button
@@ -499,7 +375,7 @@ export const StreamingWizard = ({ embedded = false }: StreamingWizardProps) => {
                     </div>
                     <div>
                       <div className="text-2xl md:text-3xl font-bold text-blue-600 mb-1">
-                        €{rec.monthlyCost}
+                        €{rec.monthlyCost.toFixed(2)}
                       </div>
                       <div className="text-xs md:text-sm text-gray-600">Pro Monat</div>
                     </div>
@@ -511,47 +387,42 @@ export const StreamingWizard = ({ embedded = false }: StreamingWizardProps) => {
                     </div>
                   </div>
 
-                  {expandedRecommendation === index && (
+                  {expandedRecommendation === index && rec.providerDetails && (
                     <div className="space-y-4 border-t pt-4">
                       <div>
                         <h4 className="font-medium mb-3 text-sm md:text-base">Anbieter-Details:</h4>
                         <div className="space-y-3">
-                          {rec.providers.map((providerName) => {
-                            const provider = providers.find(p => p.name === providerName);
-                            if (!provider) return null;
-                            
-                            return (
-                              <div key={providerName} className="flex flex-col md:flex-row md:items-center justify-between p-3 bg-white rounded-lg space-y-2 md:space-y-0">
-                                <div className="flex items-center space-x-3">
-                                  <span className="text-lg md:text-xl">{provider.logo}</span>
-                                  <div>
-                                    <div className="font-medium text-sm md:text-base">{provider.name}</div>
-                                    <div className="text-xs md:text-sm text-gray-500">
-                                      {Object.entries(provider.features)
-                                        .filter(([_, value]) => value)
-                                        .slice(0, 3)
-                                        .map(([key]) => key)
-                                        .join(", ")}
-                                    </div>
+                          {rec.providerDetails.map((provider) => (
+                            <div key={provider.name} className="flex flex-col md:flex-row md:items-center justify-between p-3 bg-white rounded-lg space-y-2 md:space-y-0">
+                              <div className="flex items-center space-x-3">
+                                <span className="text-lg md:text-xl">{provider.logo}</span>
+                                <div>
+                                  <div className="font-medium text-sm md:text-base">{provider.name}</div>
+                                  <div className="text-xs md:text-sm text-gray-500">
+                                    {Object.entries(provider.features)
+                                      .filter(([_, value]) => value)
+                                      .slice(0, 3)
+                                      .map(([key]) => featureLabels[key as keyof typeof featureLabels] || key)
+                                      .join(", ")}
                                   </div>
-                                </div>
-                                <div className="flex items-center space-x-2">
-                                  <div className="text-right">
-                                    <div className="font-bold text-sm md:text-base">€{provider.monthlyPrice}</div>
-                                    <div className="text-xs text-gray-500">pro Monat</div>
-                                  </div>
-                                  <Button 
-                                    size="sm" 
-                                    className="bg-green-600 hover:bg-green-700 text-xs md:text-sm px-2 md:px-3"
-                                    onClick={() => window.open(provider.affiliateLink, '_blank')}
-                                  >
-                                    <ExternalLink className="h-3 w-3 md:h-4 md:w-4 mr-1" />
-                                    Zu {provider.name}
-                                  </Button>
                                 </div>
                               </div>
-                            );
-                          })}
+                              <div className="flex items-center space-x-2">
+                                <div className="text-right">
+                                  <div className="font-bold text-sm md:text-base">€{provider.monthlyPrice}</div>
+                                  <div className="text-xs text-gray-500">pro Monat</div>
+                                </div>
+                                <Button 
+                                  size="sm" 
+                                  className="bg-green-600 hover:bg-green-700 text-xs md:text-sm px-2 md:px-3"
+                                  onClick={() => window.open(provider.affiliateLink, '_blank')}
+                                >
+                                  <ExternalLink className="h-3 w-3 md:h-4 md:w-4 mr-1" />
+                                  Zu {provider.name}
+                                </Button>
+                              </div>
+                            </div>
+                          ))}
                         </div>
                       </div>
 
@@ -622,4 +493,14 @@ export const StreamingWizard = ({ embedded = false }: StreamingWizardProps) => {
       </div>
     </div>
   );
+};
+
+const featureLabels = {
+  fourK: "4K Qualität",
+  multiDevice: "Mehrere Geräte",
+  liveReplay: "Live & Replay", 
+  conference: "Konferenz",
+  catchUp: "Nachträglich schauen",
+  noAds: "Werbefrei",
+  offline: "Offline-Downloads"
 };

@@ -1,194 +1,13 @@
-
 import { useState } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
-import { Check, X, Star, TrendingUp, Filter, ChevronDown, ChevronUp } from "lucide-react";
-
-const providers = [
-  {
-    name: "Sky Sport",
-    logo: "🔵",
-    monthlyPrice: 29.99,
-    yearlyPrice: 299.99,
-    competitions: {
-      "bundesliga": 100,
-      "2-bundesliga": 0,
-      "champions-league": 100,
-      "europa-league": 0,
-      "conference-league": 0,
-      "premier-league": 100,
-      "la-liga": 0,
-      "serie-a": 0,
-      "ligue-1": 0,
-      "dfb-pokal": 100,
-      "nationalteam": 50
-    },
-    features: {
-      fourK: true,
-      multiDevice: true,
-      liveReplay: true,
-      conference: true,
-      catchUp: true,
-      noAds: true,
-      offline: false
-    },
-    rating: 4.2,
-    popular: true
-  },
-  {
-    name: "DAZN",
-    logo: "🟡",
-    monthlyPrice: 44.99,
-    yearlyPrice: 449.99,
-    competitions: {
-      "bundesliga": 0,
-      "2-bundesliga": 0,
-      "champions-league": 85,
-      "europa-league": 100,
-      "conference-league": 100,
-      "premier-league": 0,
-      "la-liga": 100,
-      "serie-a": 100,
-      "ligue-1": 100,
-      "dfb-pokal": 0,
-      "nationalteam": 30
-    },
-    features: {
-      fourK: true,
-      multiDevice: true,
-      liveReplay: true,
-      conference: false,
-      catchUp: true,
-      noAds: true,
-      offline: true
-    },
-    rating: 3.8,
-    popular: false
-  },
-  {
-    name: "Amazon Prime Video",
-    logo: "🔶",
-    monthlyPrice: 8.99,
-    yearlyPrice: 89.99,
-    competitions: {
-      "bundesliga": 0,
-      "2-bundesliga": 0,
-      "champions-league": 15,
-      "europa-league": 0,
-      "conference-league": 0,
-      "premier-league": 0,
-      "la-liga": 0,
-      "serie-a": 0,
-      "ligue-1": 0,
-      "dfb-pokal": 0,
-      "nationalteam": 0
-    },
-    features: {
-      fourK: true,
-      multiDevice: true,
-      liveReplay: false,
-      conference: false,
-      catchUp: true,
-      noAds: false,
-      offline: true
-    },
-    rating: 4.1,
-    popular: false
-  },
-  {
-    name: "WOW",
-    logo: "🟣",
-    monthlyPrice: 24.99,
-    yearlyPrice: 249.99,
-    competitions: {
-      "bundesliga": 100,
-      "2-bundesliga": 0,
-      "champions-league": 100,
-      "europa-league": 0,
-      "conference-league": 0,
-      "premier-league": 100,
-      "la-liga": 0,
-      "serie-a": 0,
-      "ligue-1": 0,
-      "dfb-pokal": 100,
-      "nationalteam": 50
-    },
-    features: {
-      fourK: true,
-      multiDevice: true,
-      liveReplay: true,
-      conference: true,
-      catchUp: true,
-      noAds: true,
-      offline: false
-    },
-    rating: 3.9,
-    popular: false
-  },
-  {
-    name: "RTL+",
-    logo: "🔺",
-    monthlyPrice: 6.99,
-    yearlyPrice: 69.99,
-    competitions: {
-      "bundesliga": 0,
-      "2-bundesliga": 0,
-      "champions-league": 0,
-      "europa-league": 20,
-      "conference-league": 100,
-      "premier-league": 0,
-      "la-liga": 0,
-      "serie-a": 0,
-      "ligue-1": 0,
-      "dfb-pokal": 0,
-      "nationalteam": 0
-    },
-    features: {
-      fourK: false,
-      multiDevice: true,
-      liveReplay: true,
-      conference: false,
-      catchUp: true,
-      noAds: false,
-      offline: true
-    },
-    rating: 3.3,
-    popular: false
-  },
-  {
-    name: "MagentaTV",
-    logo: "🔴",
-    monthlyPrice: 19.99,
-    yearlyPrice: 199.99,
-    competitions: {
-      "bundesliga": 50,
-      "2-bundesliga": 100,
-      "champions-league": 0,
-      "europa-league": 0,
-      "conference-league": 0,
-      "premier-league": 0,
-      "la-liga": 0,
-      "serie-a": 0,
-      "ligue-1": 0,
-      "dfb-pokal": 50,
-      "nationalteam": 20
-    },
-    features: {
-      fourK: true,
-      multiDevice: true,
-      liveReplay: true,
-      conference: false,
-      catchUp: true,
-      noAds: true,
-      offline: false
-    },
-    rating: 3.5,
-    popular: false
-  }
-];
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Check, X, Star, TrendingUp, Filter, ChevronDown, ChevronUp, ExternalLink } from "lucide-react";
+import { useStreamingProviders } from "@/hooks/useStreamingProviders";
+import { transformStreamingData } from "@/utils/dataTransformers";
 
 const leagues = [
   { key: "bundesliga", name: "Bundesliga", icon: "🇩🇪" },
@@ -206,7 +25,7 @@ const leagues = [
 
 const featureLabels = {
   fourK: "4K Qualität",
-  multiDevice: "Mehrere Geräte",
+  multiDevice: "Mehrere Geräte", 
   liveReplay: "Live & Replay",
   conference: "Konferenz",
   catchUp: "Nachträglich schauen",
@@ -215,9 +34,24 @@ const featureLabels = {
 };
 
 export const ProviderComparison = () => {
+  const { data: streamingData, isLoading } = useStreamingProviders();
   const [selectedLeagues, setSelectedLeagues] = useState<string[]>([]);
   const [selectedFeatures, setSelectedFeatures] = useState<string[]>([]);
   const [expandedProviders, setExpandedProviders] = useState<string[]>([]);
+  const [priceType, setPriceType] = useState<"monthly" | "yearly">("monthly");
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-gray-50 py-8 flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-green-600 mx-auto"></div>
+          <p className="mt-4 text-gray-600">Lade Streaming-Anbieter...</p>
+        </div>
+      </div>
+    );
+  }
+
+  const providers = streamingData?.map(transformStreamingData) || [];
 
   const toggleExpandProvider = (providerName: string) => {
     setExpandedProviders(prev => 
@@ -238,6 +72,10 @@ export const ProviderComparison = () => {
     if (percentage >= 100) return <Check className="h-4 w-4" />;
     if (percentage === 0) return <X className="h-4 w-4" />;
     return <span className="text-xs font-bold">{percentage}%</span>;
+  };
+
+  const getCurrentPrice = (provider: any) => {
+    return priceType === "monthly" ? provider.monthlyPrice : (provider.yearlyPrice / 12);
   };
 
   return (
@@ -264,6 +102,20 @@ export const ProviderComparison = () => {
                 </CardTitle>
               </CardHeader>
               <CardContent className="space-y-6">
+                {/* Price Type Filter */}
+                <div>
+                  <Label className="text-base font-medium mb-3 block">Preistyp</Label>
+                  <Select value={priceType} onValueChange={(value: "monthly" | "yearly") => setPriceType(value)}>
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="monthly">Monatlich</SelectItem>
+                      <SelectItem value="yearly">Jährlich</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+
                 {/* Competition Filter */}
                 <div>
                   <Label className="text-base font-medium mb-3 block">Wettbewerbe</Label>
@@ -343,6 +195,8 @@ export const ProviderComparison = () => {
                 ? leagues.filter(league => selectedLeagues.includes(league.key))
                 : leagues;
 
+              const currentPrice = getCurrentPrice(provider);
+
               return (
                 <Card key={provider.name} className="overflow-hidden">
                   <CardHeader className="pb-4">
@@ -360,16 +214,26 @@ export const ProviderComparison = () => {
                             )}
                           </div>
                           <div className="flex items-center space-x-4 mt-1">
-                            <div className="text-lg font-bold text-green-600">€{provider.monthlyPrice}/Monat</div>
+                            <div className="text-lg font-bold text-green-600">
+                              €{currentPrice.toFixed(2)}/{priceType === "monthly" ? "Monat" : "Monat*"}
+                            </div>
                             <div className="flex items-center space-x-1">
                               <Star className="h-4 w-4 text-yellow-500 fill-current" />
                               <span className="text-sm font-medium">{provider.rating}</span>
                             </div>
                           </div>
+                          {priceType === "yearly" && (
+                            <div className="text-xs text-gray-500">*Bei Jahresabo</div>
+                          )}
                         </div>
                       </div>
                       <div className="flex items-center space-x-2">
-                        <Button size="sm" className="bg-green-600 hover:bg-green-700">
+                        <Button 
+                          size="sm" 
+                          className="bg-green-600 hover:bg-green-700"
+                          onClick={() => window.open(provider.affiliateLink, '_blank')}
+                        >
+                          <ExternalLink className="h-4 w-4 mr-1" />
                           Zum Anbieter
                         </Button>
                         <Button

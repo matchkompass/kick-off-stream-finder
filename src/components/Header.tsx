@@ -1,5 +1,6 @@
 
 import { useState } from "react";
+import { useNavigate, useLocation } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Search, Menu, X } from "lucide-react";
@@ -8,16 +9,13 @@ import { useLeagues } from "@/hooks/useLeagues";
 import { useStreamingProviders } from "@/hooks/useStreamingProviders";
 import { transformClubData, transformLeagueData, transformStreamingData } from "@/utils/dataTransformers";
 
-interface HeaderProps {
-  activeTab: string;
-  onTabChange: (tab: string) => void;
-  onItemSelect: (type: "club" | "league" | "provider", item: string) => void;
-}
-
-export const Header = ({ activeTab, onTabChange, onItemSelect }: HeaderProps) => {
+export const Header = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [isSearchFocused, setIsSearchFocused] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  
+  const navigate = useNavigate();
+  const location = useLocation();
 
   const { data: clubsData } = useClubs();
   const { data: leaguesData } = useLeagues();
@@ -30,20 +28,52 @@ export const Header = ({ activeTab, onTabChange, onItemSelect }: HeaderProps) =>
   const searchResults = searchTerm.length >= 2 ? [
     ...clubs.filter(club => 
       club.name.toLowerCase().includes(searchTerm.toLowerCase())
-    ).map(club => ({ type: "club" as const, name: club.name, logo: club.logo })),
+    ).map(club => ({ 
+      type: "club" as const, 
+      name: club.name, 
+      logo: club.logo,
+      slug: club.slug || club.name.toLowerCase().replace(/\s+/g, '')
+    })),
     ...leagues.filter(league => 
       league.name.toLowerCase().includes(searchTerm.toLowerCase())
-    ).map(league => ({ type: "league" as const, name: league.name, logo: league.icon })),
+    ).map(league => ({ 
+      type: "league" as const, 
+      name: league.name, 
+      logo: league.icon,
+      slug: league.key
+    })),
     ...providers.filter(provider => 
       provider.name.toLowerCase().includes(searchTerm.toLowerCase())
-    ).map(provider => ({ type: "provider" as const, name: provider.name, logo: provider.logo }))
+    ).map(provider => ({ 
+      type: "provider" as const, 
+      name: provider.name, 
+      logo: provider.logo,
+      slug: provider.slug || provider.name.toLowerCase().replace(/\s+/g, '')
+    }))
   ].slice(0, 8) : [];
 
+  const handleItemSelect = (type: "club" | "league" | "provider", slug: string) => {
+    if (type === "club") {
+      navigate(`/club/${slug}`);
+    } else if (type === "league") {
+      navigate(`/league/${slug}`);
+    } else {
+      navigate(`/streaming/${slug}`);
+    }
+    setSearchTerm("");
+    setIsSearchFocused(false);
+  };
+
   const navItems = [
-    { key: "wizard", label: "Wizard" },
-    { key: "vergleich", label: "Vergleich" },
-    { key: "news", label: "News & Deals" }
+    { key: "/wizard", label: "Wizard" },
+    { key: "/comparison", label: "Vergleich" },
+    { key: "/news-deals", label: "News & Deals" }
   ];
+
+  const getActiveTab = () => {
+    if (location.pathname === "/") return "home";
+    return location.pathname;
+  };
 
   return (
     <header className="bg-white shadow-sm border-b sticky top-0 z-50">
@@ -51,7 +81,12 @@ export const Header = ({ activeTab, onTabChange, onItemSelect }: HeaderProps) =>
         <div className="flex items-center justify-between h-16">
           {/* Logo */}
           <div className="flex-shrink-0">
-            <h1 className="text-xl font-bold text-green-600">MatchKompass</h1>
+            <button
+              onClick={() => navigate("/")}
+              className="text-xl font-bold text-green-600 hover:text-green-700 transition-colors"
+            >
+              MatchKompass
+            </button>
           </div>
 
           {/* Desktop Navigation */}
@@ -59,9 +94,9 @@ export const Header = ({ activeTab, onTabChange, onItemSelect }: HeaderProps) =>
             {navItems.map(item => (
               <button
                 key={item.key}
-                onClick={() => onTabChange(item.key)}
+                onClick={() => navigate(item.key)}
                 className={`px-3 py-2 rounded-md text-sm font-medium transition-colors ${
-                  activeTab === item.key
+                  getActiveTab() === item.key
                     ? "bg-green-100 text-green-700"
                     : "text-gray-500 hover:text-gray-700 hover:bg-gray-100"
                 }`}
@@ -91,7 +126,7 @@ export const Header = ({ activeTab, onTabChange, onItemSelect }: HeaderProps) =>
                 {searchResults.map((result, index) => (
                   <div
                     key={index}
-                    onClick={() => onItemSelect(result.type, result.name)}
+                    onClick={() => handleItemSelect(result.type, result.slug)}
                     className="flex items-center space-x-3 px-4 py-3 hover:bg-gray-50 cursor-pointer border-b border-gray-100 last:border-b-0"
                   >
                     <span className="text-lg">{result.logo}</span>
@@ -125,11 +160,11 @@ export const Header = ({ activeTab, onTabChange, onItemSelect }: HeaderProps) =>
                 <button
                   key={item.key}
                   onClick={() => {
-                    onTabChange(item.key);
+                    navigate(item.key);
                     setIsMobileMenuOpen(false);
                   }}
                   className={`block w-full text-left px-3 py-2 rounded-md text-base font-medium transition-colors ${
-                    activeTab === item.key
+                    getActiveTab() === item.key
                       ? "bg-green-100 text-green-700"
                       : "text-gray-500 hover:text-gray-700 hover:bg-gray-100"
                   }`}

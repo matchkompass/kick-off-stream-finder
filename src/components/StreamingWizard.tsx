@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -42,6 +41,40 @@ export const StreamingWizard = ({ embedded = false }: StreamingWizardProps) => {
   const filteredTeams = teams.filter(team => 
     team.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
     team.league.toLowerCase().includes(searchTerm.toLowerCase())
+  );
+
+  const renderClubItem = (team: any, isTopClub = false) => (
+    <div
+      key={team.id}
+      onClick={() => toggleTeam(team.id)}
+      className={`p-3 border rounded-lg cursor-pointer transition-all hover:shadow-md ${
+        isTopClub ? "text-center" : ""
+      } ${
+        selectedTeams.includes(team.id)
+          ? "border-green-500 bg-green-50"
+          : "border-gray-200 hover:border-gray-300"
+      }`}
+    >
+      <div className={`flex ${isTopClub ? "flex-col" : ""} items-center space-${isTopClub ? "y" : "x"}-${isTopClub ? "2" : "3"}`}>
+        <div 
+          className="text-2xl flex items-center justify-center w-8 h-8 rounded-full"
+          style={team.primaryColor ? {
+            backgroundColor: team.primaryColor,
+            color: team.primaryColor === '#FFFFFF' || team.primaryColor === '#ffffff' ? '#000000' : '#ffffff',
+            border: `2px solid ${team.primaryColor}`
+          } : {}}
+        >
+          {team.logo}
+        </div>
+        <div className={isTopClub ? "text-center" : "flex-1"}>
+          <div className={`${isTopClub ? "text-xs" : "text-sm"} font-medium text-gray-900`}>{team.name}</div>
+          {!isTopClub && <div className="text-xs text-gray-500">{team.league}</div>}
+        </div>
+        {selectedTeams.includes(team.id) && (
+          <Check className="h-4 w-4 text-green-600" />
+        )}
+      </div>
+    </div>
   );
 
   const toggleTeam = (teamId: number) => {
@@ -245,25 +278,7 @@ export const StreamingWizard = ({ embedded = false }: StreamingWizardProps) => {
               <div>
                 <h3 className="font-medium text-gray-900 mb-3">Beliebteste Vereine</h3>
                 <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
-                  {topClubs.map((team) => (
-                    <div
-                      key={team.id}
-                      onClick={() => toggleTeam(team.id)}
-                      className={`p-3 border rounded-lg cursor-pointer transition-all hover:shadow-md text-center ${
-                        selectedTeams.includes(team.id)
-                          ? "border-green-500 bg-green-50"
-                          : "border-gray-200 hover:border-gray-300"
-                      }`}
-                    >
-                      <div className="flex flex-col items-center space-y-2">
-                        <span className="text-2xl">{team.logo}</span>
-                        <div className="text-xs font-medium text-gray-900">{team.name}</div>
-                        {selectedTeams.includes(team.id) && (
-                          <Check className="h-4 w-4 text-green-600" />
-                        )}
-                      </div>
-                    </div>
-                  ))}
+                  {topClubs.map((team) => renderClubItem(team, true))}
                 </div>
               </div>
 
@@ -293,28 +308,7 @@ export const StreamingWizard = ({ embedded = false }: StreamingWizardProps) => {
                     </div>
 
                     <div className="grid grid-cols-1 gap-3 max-h-60 overflow-y-auto">
-                      {(searchTerm ? filteredTeams : teams.slice(10)).map((team) => (
-                        <div
-                          key={team.id}
-                          onClick={() => toggleTeam(team.id)}
-                          className={`p-3 border rounded-lg cursor-pointer transition-all hover:shadow-md ${
-                            selectedTeams.includes(team.id)
-                              ? "border-green-500 bg-green-50"
-                              : "border-gray-200 hover:border-gray-300"
-                          }`}
-                        >
-                          <div className="flex items-center space-x-3">
-                            <span className="text-xl">{team.logo}</span>
-                            <div className="flex-1">
-                              <div className="font-medium text-gray-900 text-sm">{team.name}</div>
-                              <div className="text-xs text-gray-500">{team.league}</div>
-                            </div>
-                            {selectedTeams.includes(team.id) && (
-                              <Check className="h-5 w-5 text-green-600" />
-                            )}
-                          </div>
-                        </div>
-                      ))}
+                      {(searchTerm ? filteredTeams : teams.slice(10)).map((team) => renderClubItem(team, false))}
                     </div>
                   </>
                 )}
@@ -364,9 +358,12 @@ export const StreamingWizard = ({ embedded = false }: StreamingWizardProps) => {
                             className="p-3 border border-blue-500 bg-blue-50 rounded-lg cursor-pointer transition-all hover:shadow-sm"
                           >
                             <div className="flex items-center justify-between">
-                              <div>
-                                <div className="font-medium text-gray-900 text-sm">{competition.name}</div>
-                                <div className="text-xs text-gray-500">{competition.description}</div>
+                              <div className="flex items-center space-x-2">
+                                <span>{competition.icon}</span>
+                                <div>
+                                  <div className="font-medium text-gray-900 text-sm">{competition.name}</div>
+                                  <div className="text-xs text-gray-500">{competition.gamesCount} Spiele</div>
+                                </div>
                               </div>
                               <Check className="h-4 w-4 text-blue-600" />
                             </div>
@@ -394,9 +391,12 @@ export const StreamingWizard = ({ embedded = false }: StreamingWizardProps) => {
                             className="p-3 border border-gray-200 hover:border-gray-300 rounded-lg cursor-pointer transition-all hover:shadow-sm"
                           >
                             <div className="flex items-center justify-between">
-                              <div>
-                                <div className="font-medium text-gray-900 text-sm">{competition.name}</div>
-                                <div className="text-xs text-gray-500">{competition.description}</div>
+                              <div className="flex items-center space-x-2">
+                                <span>{competition.icon}</span>
+                                <div>
+                                  <div className="font-medium text-gray-900 text-sm">{competition.name}</div>
+                                  <div className="text-xs text-gray-500">{competition.gamesCount} Spiele</div>
+                                </div>
                               </div>
                             </div>
                           </div>

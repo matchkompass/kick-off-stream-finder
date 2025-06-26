@@ -29,9 +29,9 @@ export const Footer = () => {
                 </Link>
               </li>
               <li>
-                <a href="/datenschutz" className="hover:text-green-400 transition-colors">
+                <Link to="/datenschutz" className="hover:text-green-400 transition-colors">
                   Datenschutz
-                </a>
+                </Link>
               </li>
               <li>
                 <a href="/agb" className="hover:text-green-400 transition-colors">

@@ -6,7 +6,7 @@ import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
-import { ArrowLeft, ArrowRight, Search, Check, TrendingUp, Star, Trophy, ChevronDown, ChevronUp, ExternalLink } from "lucide-react";
+import { ArrowLeft, ArrowRight, Search, Check, Trophy, ExternalLink } from "lucide-react";
 import { useClubs } from "@/hooks/useClubs";
 import { useLeagues } from "@/hooks/useLeagues";
 import { useStreamingProviders } from "@/hooks/useStreamingProviders";
@@ -24,24 +24,20 @@ export const StreamingWizard = ({ embedded = false }: StreamingWizardProps) => {
   const [currentStep, setCurrentStep] = useState(1);
   const [selectedTeams, setSelectedTeams] = useState<number[]>([]);
   const [selectedCompetitions, setSelectedCompetitions] = useState<string[]>([]);
+  const [selectedFeatures, setSelectedFeatures] = useState<string[]>([]);
+  const [ownedProviders, setOwnedProviders] = useState<string[]>([]);
   const [searchTerm, setSearchTerm] = useState("");
-  const [preferences, setPreferences] = useState({
-    conference: false,
-    catchUp: false,
-    fourK: false,
-    multiDevice: false,
-    noAds: false,
-    offline: false,
-  });
-  const [expandedRecommendation, setExpandedRecommendation] = useState<number | null>(null);
+  const [showAllClubs, setShowAllClubs] = useState(false);
 
-  const maxSteps = embedded ? 3 : 4;
+  const maxSteps = embedded ? 4 : 5;
 
   // Transform data
   const teams = clubsData?.map(transformClubData) || [];
   const competitions = leaguesData?.map(transformLeagueData) || [];
   const providers = streamingData?.map(transformStreamingData) || [];
 
+  // Get top 10 most popular clubs for initial display
+  const topClubs = teams.slice(0, 10);
   const filteredTeams = teams.filter(team => 
     team.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
     team.league.toLowerCase().includes(searchTerm.toLowerCase())
@@ -76,13 +72,15 @@ export const StreamingWizard = ({ embedded = false }: StreamingWizardProps) => {
   const calculateRecommendations = () => {
     if (!providers.length) return [];
 
-    // Calculate coverage for each provider based on selected competitions
-    const providerCoverage = providers.map(provider => {
+    // Calculate coverage for each provider combination
+    const availableProviders = providers.filter(p => !ownedProviders.includes(p.name));
+    
+    const providerCoverage = availableProviders.map(provider => {
       const relevantComps = selectedCompetitions.length > 0 ? selectedCompetitions : Object.keys(provider.competitions);
       const totalCoverage = relevantComps.reduce((sum, comp) => {
         return sum + (provider.competitions[comp as keyof typeof provider.competitions] || 0);
       }, 0);
-      const avgCoverage = relevantComps.length > 0 ? totalCoverage / relevantComps.length : 0;
+      const avgCoverage = relevantComps.length > 0 ? Math.min(100, totalCoverage / relevantComps.length) : 0;
       
       return {
         provider,
@@ -96,47 +94,84 @@ export const StreamingWizard = ({ embedded = false }: StreamingWizardProps) => {
 
     const recommendations = [];
     
-    // Find best single provider (highest coverage)
-    const bestSingle = providerCoverage[0];
-    if (bestSingle) {
+    // Perfect combination (100% coverage)
+    const perfectCombination = findBestCombination(providerCoverage, 100);
+    if (perfectCombination) {
       recommendations.push({
-        coverage: bestSingle.coverage,
-        providers: [bestSingle.provider.name],
-        monthlyCost: bestSingle.price,
-        description: bestSingle.coverage >= 90 ? "Beste Einzellösung" : "Budget-Option",
-        features: Object.entries(bestSingle.provider.features)
-          .filter(([_, value]) => value)
-          .map(([key]) => featureLabels[key as keyof typeof featureLabels] || key),
-        providerDetails: [bestSingle.provider]
+        ...perfectCombination,
+        description: "Perfekte Kombination (100% Abdeckung)",
+        type: "perfect"
       });
     }
 
-    // Find best two-provider combination
-    const topProviders = providerCoverage.slice(0, 3);
-    for (let i = 0; i < topProviders.length - 1; i++) {
-      for (let j = i + 1; j < topProviders.length; j++) {
-        const combinedCoverage = Math.min(100, topProviders[i].coverage + topProviders[j].coverage * 0.5);
-        const combinedPrice = topProviders[i].price + topProviders[j].price;
-        
-        if (combinedCoverage > (recommendations[0]?.coverage || 0)) {
-          recommendations.unshift({
-            coverage: Math.round(combinedCoverage),
-            providers: [topProviders[i].provider.name, topProviders[j].provider.name],
-            monthlyCost: combinedPrice,
-            description: "Maximale Abdeckung",
-            features: ["4K", "Multi-Device", "Conference", "Catch-Up", "No Ads"],
-            providerDetails: [topProviders[i].provider, topProviders[j].provider]
-          });
-          break;
-        }
-      }
-      if (recommendations.length >= 2) break;
+    // Above 90% coverage (cheapest)
+    const goodCombination = findBestCombination(providerCoverage, 90, true);
+    if (goodCombination && goodCombination.coverage >= 90) {
+      recommendations.push({
+        ...goodCombination,
+        description: "Günstigste Option (>90% Abdeckung)",
+        type: "good"
+      });
+    }
+
+    // Budget variant (>66% coverage)
+    const budgetCombination = findBestCombination(providerCoverage, 66, true);
+    if (budgetCombination && budgetCombination.coverage >= 66) {
+      recommendations.push({
+        ...budgetCombination,
+        description: "Budget-Variante (>66% Abdeckung)",
+        type: "budget"
+      });
     }
 
     return recommendations.slice(0, 3);
   };
 
-  const recommendations = currentStep === 4 ? calculateRecommendations() : [];
+  const findBestCombination = (providerCoverage: any[], minCoverage: number, prioritizePrice = false) => {
+    let bestCombination = null;
+    let bestScore = prioritizePrice ? Infinity : 0;
+
+    // Single provider
+    for (const single of providerCoverage) {
+      if (single.coverage >= minCoverage) {
+        const score = prioritizePrice ? single.price : single.coverage;
+        if ((prioritizePrice && score < bestScore) || (!prioritizePrice && score > bestScore)) {
+          bestCombination = {
+            coverage: single.coverage,
+            providers: [single.provider.name],
+            monthlyCost: single.price,
+            providerDetails: [single.provider]
+          };
+          bestScore = score;
+        }
+      }
+    }
+
+    // Two provider combinations
+    for (let i = 0; i < providerCoverage.length - 1; i++) {
+      for (let j = i + 1; j < providerCoverage.length; j++) {
+        const combinedCoverage = Math.min(100, providerCoverage[i].coverage + (providerCoverage[j].coverage * 0.6));
+        const combinedPrice = providerCoverage[i].price + providerCoverage[j].price;
+        
+        if (combinedCoverage >= minCoverage) {
+          const score = prioritizePrice ? combinedPrice : combinedCoverage;
+          if ((prioritizePrice && score < bestScore) || (!prioritizePrice && score > bestScore)) {
+            bestCombination = {
+              coverage: Math.round(combinedCoverage),
+              providers: [providerCoverage[i].provider.name, providerCoverage[j].provider.name],
+              monthlyCost: combinedPrice,
+              providerDetails: [providerCoverage[i].provider, providerCoverage[j].provider]
+            };
+            bestScore = score;
+          }
+        }
+      }
+    }
+
+    return bestCombination;
+  };
+
+  const recommendations = currentStep === 5 ? calculateRecommendations() : [];
 
   if (clubsLoading || leaguesLoading || streamingLoading) {
     return (
@@ -149,7 +184,7 @@ export const StreamingWizard = ({ embedded = false }: StreamingWizardProps) => {
     );
   }
 
-  if (embedded && currentStep === 4) {
+  if (embedded && currentStep === 5) {
     setCurrentStep(1);
   }
 
@@ -171,56 +206,100 @@ export const StreamingWizard = ({ embedded = false }: StreamingWizardProps) => {
 
         {embedded && (
           <div className="mb-4 md:mb-6">
-            <Progress value={(currentStep / 3) * 100} className="h-2" />
+            <Progress value={(currentStep / 4) * 100} className="h-2" />
             <div className="text-center mt-2">
-              <span className="text-sm text-gray-600">Schritt {currentStep} von 3</span>
+              <span className="text-sm text-gray-600">Schritt {currentStep} von 4</span>
             </div>
           </div>
         )}
 
-        {/* Step 1: Team Selection */}
+        {/* Step 1: Club Selection */}
         {currentStep === 1 && (
           <Card>
             <CardHeader className="pb-4">
               <CardTitle className="text-lg md:text-xl">Welche Vereine interessieren Sie?</CardTitle>
               <CardDescription className="text-sm md:text-base">
-                Wählen Sie Ihre Lieblingsvereine aus. Relevante Wettbewerbe werden automatisch vorausgewählt.
+                Wählen Sie Ihre Lieblingsvereine aus. Die Top 10 werden angezeigt, weitere finden Sie über die Suche.
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4 md:space-y-6">
-              <div className="relative">
-                <Search className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
-                <Input
-                  placeholder="Verein oder Liga suchen..."
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                  className="pl-10"
-                />
+              {/* Top 10 Clubs Grid */}
+              <div>
+                <h3 className="font-medium text-gray-900 mb-3">Beliebteste Vereine</h3>
+                <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
+                  {topClubs.map((team) => (
+                    <div
+                      key={team.id}
+                      onClick={() => toggleTeam(team.id)}
+                      className={`p-3 border rounded-lg cursor-pointer transition-all hover:shadow-md text-center ${
+                        selectedTeams.includes(team.id)
+                          ? "border-green-500 bg-green-50"
+                          : "border-gray-200 hover:border-gray-300"
+                      }`}
+                    >
+                      <div className="flex flex-col items-center space-y-2">
+                        <span className="text-2xl">{team.logo}</span>
+                        <div className="text-xs font-medium text-gray-900">{team.name}</div>
+                        {selectedTeams.includes(team.id) && (
+                          <Check className="h-4 w-4 text-green-600" />
+                        )}
+                      </div>
+                    </div>
+                  ))}
+                </div>
               </div>
 
-              <div className="grid grid-cols-1 gap-3">
-                {filteredTeams.map((team) => (
-                  <div
-                    key={team.id}
-                    onClick={() => toggleTeam(team.id)}
-                    className={`p-3 md:p-4 border rounded-lg cursor-pointer transition-all hover:shadow-md ${
-                      selectedTeams.includes(team.id)
-                        ? "border-green-500 bg-green-50"
-                        : "border-gray-200 hover:border-gray-300"
-                    }`}
+              {/* Search Section */}
+              <div className="border-t pt-4">
+                <div className="flex items-center justify-between mb-3">
+                  <h3 className="font-medium text-gray-900">Weitere Vereine</h3>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setShowAllClubs(!showAllClubs)}
                   >
-                    <div className="flex items-center space-x-3">
-                      <span className="text-xl md:text-2xl">{team.logo}</span>
-                      <div className="flex-1">
-                        <div className="font-medium text-gray-900 text-sm md:text-base">{team.name}</div>
-                        <div className="text-xs md:text-sm text-gray-500">{team.league}</div>
-                      </div>
-                      {selectedTeams.includes(team.id) && (
-                        <Check className="h-5 w-5 text-green-600" />
-                      )}
+                    {showAllClubs ? "Weniger anzeigen" : "Mehr anzeigen"}
+                  </Button>
+                </div>
+                
+                {showAllClubs && (
+                  <>
+                    <div className="relative mb-4">
+                      <Search className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
+                      <Input
+                        placeholder="Verein oder Liga suchen..."
+                        value={searchTerm}
+                        onChange={(e) => setSearchTerm(e.target.value)}
+                        className="pl-10"
+                      />
                     </div>
-                  </div>
-                ))}
+
+                    <div className="grid grid-cols-1 gap-3 max-h-60 overflow-y-auto">
+                      {(searchTerm ? filteredTeams : teams.slice(10)).map((team) => (
+                        <div
+                          key={team.id}
+                          onClick={() => toggleTeam(team.id)}
+                          className={`p-3 border rounded-lg cursor-pointer transition-all hover:shadow-md ${
+                            selectedTeams.includes(team.id)
+                              ? "border-green-500 bg-green-50"
+                              : "border-gray-200 hover:border-gray-300"
+                          }`}
+                        >
+                          <div className="flex items-center space-x-3">
+                            <span className="text-xl">{team.logo}</span>
+                            <div className="flex-1">
+                              <div className="font-medium text-gray-900 text-sm">{team.name}</div>
+                              <div className="text-xs text-gray-500">{team.league}</div>
+                            </div>
+                            {selectedTeams.includes(team.id) && (
+                              <Check className="h-5 w-5 text-green-600" />
+                            )}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </>
+                )}
               </div>
 
               {selectedTeams.length > 0 && (
@@ -291,11 +370,11 @@ export const StreamingWizard = ({ embedded = false }: StreamingWizardProps) => {
           </Card>
         )}
 
-        {/* Step 3: Preferences */}
+        {/* Step 3: Features */}
         {currentStep === 3 && (
           <Card>
             <CardHeader>
-              <CardTitle>Streaming-Präferenzen</CardTitle>
+              <CardTitle>Gewünschte Features</CardTitle>
               <CardDescription>
                 Wählen Sie die Features aus, die für Sie wichtig sind.
               </CardDescription>
@@ -313,12 +392,13 @@ export const StreamingWizard = ({ embedded = false }: StreamingWizardProps) => {
                   <div key={feature.key} className="flex items-start space-x-3 p-3 border rounded-lg hover:bg-gray-50">
                     <Checkbox
                       id={feature.key}
-                      checked={preferences[feature.key as keyof typeof preferences]}
+                      checked={selectedFeatures.includes(feature.key)}
                       onCheckedChange={(checked) => {
-                        setPreferences(prev => ({
-                          ...prev,
-                          [feature.key]: checked
-                        }));
+                        if (checked) {
+                          setSelectedFeatures(prev => [...prev, feature.key]);
+                        } else {
+                          setSelectedFeatures(prev => prev.filter(f => f !== feature.key));
+                        }
                       }}
                       className="mt-1"
                     />
@@ -333,8 +413,54 @@ export const StreamingWizard = ({ embedded = false }: StreamingWizardProps) => {
           </Card>
         )}
 
-        {/* Step 4: Enhanced Results with affiliate buttons */}
-        {currentStep === 4 && recommendations && !embedded && (
+        {/* Step 4: Owned Providers */}
+        {currentStep === 4 && (
+          <Card>
+            <CardHeader>
+              <CardTitle>Bereits vorhandene Streaming-Dienste</CardTitle>
+              <CardDescription>
+                Wählen Sie die Streaming-Dienste aus, die Sie bereits besitzen.
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-6">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {providers.map((provider) => (
+                  <div
+                    key={provider.name}
+                    onClick={() => {
+                      if (ownedProviders.includes(provider.name)) {
+                        setOwnedProviders(prev => prev.filter(p => p !== provider.name));
+                      } else {
+                        setOwnedProviders(prev => [...prev, provider.name]);
+                      }
+                    }}
+                    className={`p-4 border rounded-lg cursor-pointer transition-all hover:shadow-md ${
+                      ownedProviders.includes(provider.name)
+                        ? "border-blue-500 bg-blue-50"
+                        : "border-gray-200 hover:border-gray-300"
+                    }`}
+                  >
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center space-x-3">
+                        <span className="text-xl">{provider.logo}</span>
+                        <div>
+                          <div className="font-medium text-gray-900">{provider.name}</div>
+                          <div className="text-sm text-gray-500">€{provider.monthlyPrice}/Monat</div>
+                        </div>
+                      </div>
+                      {ownedProviders.includes(provider.name) && (
+                        <Check className="h-5 w-5 text-blue-600" />
+                      )}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
+        )}
+
+        {/* Step 5: Results */}
+        {currentStep === 5 && recommendations && !embedded && (
           <div className="space-y-4 md:space-y-6">
             <Card className="border-green-200 bg-green-50">
               <CardHeader className="pb-4">
@@ -343,27 +469,25 @@ export const StreamingWizard = ({ embedded = false }: StreamingWizardProps) => {
                   Ihre optimalen Streaming-Lösungen
                 </CardTitle>
                 <CardDescription className="text-green-700 text-sm md:text-base">
-                  Basierend auf Ihren Präferenzen haben wir {recommendations.length} Optionen für Sie gefunden.
+                  Basierend auf Ihren Präferenzen und bereits vorhandenen Diensten.
                 </CardDescription>
               </CardHeader>
             </Card>
 
             {recommendations.map((rec, index) => (
-              <Card key={index} className={`${index === 0 ? 'border-green-500 bg-green-50' : index === 1 ? 'border-blue-500 bg-blue-50' : 'border-orange-500 bg-orange-50'}`}>
+              <Card key={index} className={`${
+                rec.type === 'perfect' ? 'border-green-500 bg-green-50' : 
+                rec.type === 'good' ? 'border-blue-500 bg-blue-50' : 
+                'border-orange-500 bg-orange-50'
+              }`}>
                 <CardHeader className="pb-4">
-                  <div className="flex items-center justify-between">
-                    <CardTitle className={`${index === 0 ? 'text-green-800' : index === 1 ? 'text-blue-800' : 'text-orange-800'} text-lg md:text-xl`}>
-                      {rec.description}
-                    </CardTitle>
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => setExpandedRecommendation(expandedRecommendation === index ? null : index)}
-                      className="p-2"
-                    >
-                      {expandedRecommendation === index ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
-                    </Button>
-                  </div>
+                  <CardTitle className={`${
+                    rec.type === 'perfect' ? 'text-green-800' : 
+                    rec.type === 'good' ? 'text-blue-800' : 
+                    'text-orange-800'
+                  } text-lg md:text-xl`}>
+                    {rec.description}
+                  </CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-4">
                   <div className="grid grid-cols-3 gap-4 md:gap-6 text-center">
@@ -383,63 +507,31 @@ export const StreamingWizard = ({ embedded = false }: StreamingWizardProps) => {
                       <div className="text-sm md:text-lg font-medium text-gray-700">
                         {rec.providers.join(" + ")}
                       </div>
-                      <div className="text-xs md:text-sm text-gray-600">Anbieter-Kombination</div>
+                      <div className="text-xs md:text-sm text-gray-600">Zusätzliche Anbieter</div>
                     </div>
                   </div>
 
-                  {expandedRecommendation === index && rec.providerDetails && (
-                    <div className="space-y-4 border-t pt-4">
-                      <div>
-                        <h4 className="font-medium mb-3 text-sm md:text-base">Anbieter-Details:</h4>
-                        <div className="space-y-3">
-                          {rec.providerDetails.map((provider) => (
-                            <div key={provider.name} className="flex flex-col md:flex-row md:items-center justify-between p-3 bg-white rounded-lg space-y-2 md:space-y-0">
-                              <div className="flex items-center space-x-3">
-                                <span className="text-lg md:text-xl">{provider.logo}</span>
-                                <div>
-                                  <div className="font-medium text-sm md:text-base">{provider.name}</div>
-                                  <div className="text-xs md:text-sm text-gray-500">
-                                    {Object.entries(provider.features)
-                                      .filter(([_, value]) => value)
-                                      .slice(0, 3)
-                                      .map(([key]) => featureLabels[key as keyof typeof featureLabels] || key)
-                                      .join(", ")}
-                                  </div>
-                                </div>
-                              </div>
-                              <div className="flex items-center space-x-2">
-                                <div className="text-right">
-                                  <div className="font-bold text-sm md:text-base">€{provider.monthlyPrice}</div>
-                                  <div className="text-xs text-gray-500">pro Monat</div>
-                                </div>
-                                <Button 
-                                  size="sm" 
-                                  className="bg-green-600 hover:bg-green-700 text-xs md:text-sm px-2 md:px-3"
-                                  onClick={() => window.open(provider.affiliateLink, '_blank')}
-                                >
-                                  <ExternalLink className="h-3 w-3 md:h-4 md:w-4 mr-1" />
-                                  Zu {provider.name}
-                                </Button>
-                              </div>
+                  {rec.providerDetails && (
+                    <div className="space-y-3 border-t pt-4">
+                      {rec.providerDetails.map((provider) => (
+                        <div key={provider.name} className="flex flex-col md:flex-row md:items-center justify-between p-3 bg-white rounded-lg space-y-2 md:space-y-0">
+                          <div className="flex items-center space-x-3">
+                            <span className="text-lg md:text-xl">{provider.logo}</span>
+                            <div>
+                              <div className="font-medium text-sm md:text-base">{provider.name}</div>
+                              <div className="text-xs md:text-sm text-gray-500">€{provider.monthlyPrice}/Monat</div>
                             </div>
-                          ))}
+                          </div>
+                          <Button 
+                            size="sm" 
+                            className="bg-green-600 hover:bg-green-700 text-xs md:text-sm px-2 md:px-3"
+                            onClick={() => window.open(provider.affiliateLink, '_blank')}
+                          >
+                            <ExternalLink className="h-3 w-3 md:h-4 md:w-4 mr-1" />
+                            Zu {provider.name}
+                          </Button>
                         </div>
-                      </div>
-
-                      <div>
-                        <h4 className="font-medium mb-2 text-sm md:text-base">Alle Features:</h4>
-                        <div className="flex flex-wrap gap-2">
-                          {rec.features.map(feature => (
-                            <Badge key={feature} variant="secondary" className="bg-blue-100 text-blue-800 text-xs">
-                              {feature}
-                            </Badge>
-                          ))}
-                        </div>
-                      </div>
-
-                      <Button className="w-full bg-green-600 hover:bg-green-700 text-sm md:text-base py-2 md:py-3">
-                        Diese Kombination wählen
-                      </Button>
+                      ))}
                     </div>
                   )}
                 </CardContent>
@@ -473,7 +565,7 @@ export const StreamingWizard = ({ embedded = false }: StreamingWizardProps) => {
             
             <Button
               onClick={() => {
-                if (embedded && currentStep === 3) {
+                if (embedded && currentStep === 4) {
                   alert("Analyse abgeschlossen! Wechseln Sie zur Vergleichsseite für Details.");
                   return;
                 }

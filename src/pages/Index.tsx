@@ -7,7 +7,7 @@ const Index = () => {
   return (
     <div className="min-h-screen bg-gray-50">
       <Header />
-      <HomePage />
+      <HomePage onStartWizard={() => {}} />
       <Footer />
     </div>
   );

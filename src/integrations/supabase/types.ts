@@ -179,6 +179,7 @@ export type Database = {
       leagues: {
         Row: {
           "country code": string | null
+          country_code: string | null
           league: string | null
           league_id: number
           league_slug: string | null
@@ -186,6 +187,7 @@ export type Database = {
         }
         Insert: {
           "country code"?: string | null
+          country_code?: string | null
           league?: string | null
           league_id: number
           league_slug?: string | null
@@ -193,6 +195,7 @@ export type Database = {
         }
         Update: {
           "country code"?: string | null
+          country_code?: string | null
           league?: string | null
           league_id?: number
           league_slug?: string | null

@@ -1,14 +1,17 @@
 import { useState, useCallback } from 'react';
 import { StreamingOptimizer } from '@/lib/StreamingOptimizer';
-import { useSupabaseClient } from '@supabase/auth-helpers-react';
+import { supabase } from '@/integrations/supabase/client';
 
 export function useStreamingOptimizer() {
-  const supabase = useSupabaseClient();
   const [results, setResults] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const optimize = useCallback(async (clubIds: number[], targetCoverages: number[] = [100, 90, 66]) => {
+  const optimize = useCallback(async (
+    clubIds: number[], 
+    ownedProviders: number[] = [],
+    targetCoverages: number[] = [100, 90, 66]
+  ) => {
     if (clubIds.length === 0) {
       setError('Bitte wählen Sie mindestens einen Verein aus');
       return;
@@ -21,6 +24,7 @@ export function useStreamingOptimizer() {
       const optimizer = new StreamingOptimizer(supabase);
       const optimizationResults = await optimizer.optimizeForClubs({
         clubIds,
+        ownedProviders,
         targetCoverage: Math.min(...targetCoverages)
       });
 
@@ -31,7 +35,7 @@ export function useStreamingOptimizer() {
     } finally {
       setLoading(false);
     }
-  }, [supabase]);
+  }, []);
 
   const clearResults = useCallback(() => {
     setResults([]);
@@ -45,4 +49,4 @@ export function useStreamingOptimizer() {
     error,
     clearResults
   };
-} 
+}

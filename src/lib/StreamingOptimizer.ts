@@ -1,10 +1,11 @@
 import { SupabaseClient } from '@supabase/supabase-js';
-import { Database } from '@/types/database.types';
+import { Database } from '@/integrations/supabase/types';
 
 interface OptimizationRequest {
   clubIds: number[];
-  targetCoverage: number;
+  targetCoverage?: number;
   maxProviders?: number;
+  ownedProviders?: number[];
 }
 
 interface OptimizationResult {
@@ -14,13 +15,26 @@ interface OptimizationResult {
   coveredLeagues: number;
   totalLeagues: number;
   savings?: number;
+  leagueDetails: LeagueDetail[];
+  missingLeagues: LeagueDetail[];
 }
 
 interface StreamingProvider {
   streamer_id: number;
   provider_name: string;
+  name: string;
   monthly_price: string;
   covered_league_ids: number[];
+  features?: any;
+  affiliate_url?: string;
+}
+
+interface LeagueDetail {
+  league_id: number;
+  league_name: string;
+  coverage_percentage: number;
+  total_games: number;
+  covered_games: number;
 }
 
 export class StreamingOptimizer {
@@ -43,15 +57,32 @@ export class StreamingOptimizer {
     // 2. Get all streaming providers with their coverage
     const providers = await this.getStreamingProviders(requiredLeagueIds);
     
-    // 3. Calculate optimal combinations for different coverage levels
+    // 3. Filter out owned providers from available options
+    const availableProviders = request.ownedProviders && request.ownedProviders.length > 0
+      ? providers.filter(p => !request.ownedProviders!.includes(p.streamer_id))
+      : providers;
+
+    // 4. Calculate optimal combinations for different coverage levels
     const results = await Promise.all([
-      this.findOptimalCombination(requiredLeagueIds, providers, 100),
-      this.findOptimalCombination(requiredLeagueIds, providers, 90),
-      this.findOptimalCombination(requiredLeagueIds, providers, 66)
+      this.findOptimalCombination(requiredLeagueIds, availableProviders, 100),
+      this.findOptimalCombination(requiredLeagueIds, availableProviders, 90),
+      this.findOptimalCombination(requiredLeagueIds, availableProviders, 66)
     ]);
 
-    this.cache.set(cacheKey, results.filter(Boolean));
-    return results.filter(Boolean);
+    // 5. Add owned providers to each result if they exist
+    const finalResults = results.filter(Boolean).map(result => {
+      if (request.ownedProviders && request.ownedProviders.length > 0) {
+        const ownedProvidersData = providers.filter(p => request.ownedProviders!.includes(p.streamer_id));
+        return this.combineWithOwnedProviders(result!, ownedProvidersData, requiredLeagueIds);
+      }
+      return result!;
+    });
+
+    // 6. Generate all possible combinations for transparency
+    const allCombinations = await this.generateAllCombinations(requiredLeagueIds, availableProviders, request.ownedProviders || []);
+
+    this.cache.set(cacheKey, [...finalResults, ...allCombinations]);
+    return [...finalResults, ...allCombinations];
   }
 
   private async getRequiredLeagues(clubIds: number[]): Promise<number[]> {
@@ -69,7 +100,10 @@ export class StreamingOptimizer {
       .select(`
         streamer_id,
         provider_name,
+        name,
         monthly_price,
+        features,
+        affiliate_url,
         streaming_leagues!inner(
           league_id,
           coverage_percentage
@@ -98,7 +132,7 @@ export class StreamingOptimizer {
       const combinations = this.getCombinations(providers, size);
       
       for (const combination of combinations) {
-        const solution = this.evaluateCombination(
+        const solution = await this.evaluateCombination(
           combination,
           requiredLeagueIds,
           targetCoverage
@@ -118,11 +152,11 @@ export class StreamingOptimizer {
     return bestSolution;
   }
 
-  private evaluateCombination(
+  private async evaluateCombination(
     providers: StreamingProvider[],
     requiredLeagueIds: number[],
-    targetCoverage: number
-  ): OptimizationResult {
+    targetCoverage?: number
+  ): Promise<OptimizationResult> {
     const coveredLeagues = new Set<number>();
     let totalCost = 0;
 
@@ -138,13 +172,118 @@ export class StreamingOptimizer {
 
     const coveragePercentage = (coveredLeagues.size / requiredLeagueIds.length) * 100;
 
+    // Get detailed league information
+    const leagueDetails = await this.getLeagueDetails(Array.from(coveredLeagues), providers);
+    const missingLeagues = await this.getLeagueDetails(
+      requiredLeagueIds.filter(id => !coveredLeagues.has(id)), 
+      []
+    );
+
     return {
       providers,
       totalCost: Math.round(totalCost * 100) / 100,
       coveragePercentage: Math.round(coveragePercentage),
       coveredLeagues: coveredLeagues.size,
-      totalLeagues: requiredLeagueIds.length
+      totalLeagues: requiredLeagueIds.length,
+      leagueDetails,
+      missingLeagues
     };
+  }
+
+  private async getLeagueDetails(leagueIds: number[], providers: StreamingProvider[]): Promise<LeagueDetail[]> {
+    if (leagueIds.length === 0) return [];
+
+    const { data: leagues } = await this.supabase
+      .from('leagues')
+      .select('league_id, league, "number of games"')
+      .in('league_id', leagueIds);
+
+    const { data: streamingLeagues } = await this.supabase
+      .from('streaming_leagues')
+      .select('league_id, coverage_percentage, streamer_id')
+      .in('league_id', leagueIds)
+      .in('streamer_id', providers.map(p => p.streamer_id));
+
+    return leagues?.map(league => {
+      const streamingData = streamingLeagues?.find(sl => 
+        sl.league_id === league.league_id && 
+        providers.some(p => p.streamer_id === sl.streamer_id)
+      );
+      
+      const coveragePercentage = streamingData?.coverage_percentage || 0;
+      const totalGames = league["number of games"] || 0;
+      const coveredGames = Math.round((totalGames * coveragePercentage) / 100);
+
+      return {
+        league_id: league.league_id,
+        league_name: league.league || '',
+        coverage_percentage: coveragePercentage,
+        total_games: totalGames,
+        covered_games: coveredGames
+      };
+    }) || [];
+  }
+
+  private combineWithOwnedProviders(
+    result: OptimizationResult, 
+    ownedProviders: StreamingProvider[], 
+    requiredLeagueIds: number[]
+  ): OptimizationResult {
+    const allProviders = [...ownedProviders, ...result.providers];
+    const coveredLeagues = new Set<number>();
+    
+    allProviders.forEach(provider => {
+      provider.covered_league_ids.forEach(leagueId => {
+        if (requiredLeagueIds.includes(leagueId)) {
+          coveredLeagues.add(leagueId);
+        }
+      });
+    });
+
+    const coveragePercentage = (coveredLeagues.size / requiredLeagueIds.length) * 100;
+
+    return {
+      ...result,
+      providers: allProviders,
+      coveragePercentage: Math.round(coveragePercentage),
+      coveredLeagues: coveredLeagues.size,
+      // Don't add cost of owned providers
+      totalCost: result.totalCost
+    };
+  }
+
+  private async generateAllCombinations(
+    requiredLeagueIds: number[], 
+    providers: StreamingProvider[], 
+    ownedProviders: number[]
+  ): Promise<OptimizationResult[]> {
+    const allCombinations: OptimizationResult[] = [];
+    const maxCombinations = 4;
+
+    for (let size = 1; size <= maxCombinations; size++) {
+      const combinations = this.getCombinations(providers, size);
+      
+      for (const combination of combinations) {
+        const result = await this.evaluateCombination(combination, requiredLeagueIds);
+        
+        // Add owned providers if they exist
+        if (ownedProviders.length > 0) {
+          const ownedProvidersData = providers.filter(p => ownedProviders.includes(p.streamer_id));
+          const finalResult = this.combineWithOwnedProviders(result, ownedProvidersData, requiredLeagueIds);
+          allCombinations.push(finalResult);
+        } else {
+          allCombinations.push(result);
+        }
+      }
+    }
+
+    // Sort by coverage percentage (desc), then by cost (asc)
+    return allCombinations.sort((a, b) => {
+      if (b.coveragePercentage !== a.coveragePercentage) {
+        return b.coveragePercentage - a.coveragePercentage;
+      }
+      return a.totalCost - b.totalCost;
+    });
   }
 
   private getCombinations<T>(arr: T[], size: number): T[][] {
@@ -171,4 +310,4 @@ export class StreamingOptimizer {
   clearCache(): void {
     this.cache.clear();
   }
-} 
+}
